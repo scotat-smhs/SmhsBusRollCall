@@ -299,16 +299,21 @@ class App {
   }
 
   private async fetchPhotoSecure(uid: string) {
-    const photoEl = document.getElementById('student-photo') as HTMLImageElement;
     try {
-        const res = await fetch(`${BASE_URL}/api/photo/${uid}`, {
-            headers: { 'Authorization': `Bearer ${this.authToken}` }
-        });
-        if (res.ok) {
-            const blob = await res.blob();
+        const res = await fetch(`${BASE_URL}/api/photo/${uid}?token=${this.authToken}`);
+        if (!res.ok) {
+            console.warn(`Photo fetch failed: ${res.status}`);
+            return;
+        }
+        const blob = await res.blob();
+        if (uid === this.currentUid) {
+            const photoEl = document.getElementById('student-photo') as HTMLImageElement;
+            if (photoEl.src.startsWith('blob:')) URL.revokeObjectURL(photoEl.src);
             photoEl.src = URL.createObjectURL(blob);
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error(`fetchPhotoSecure error for uid=${uid}:`, e);
+    }
   }
 
   private isBusMatch(studentBus: string | undefined, selectedBus: string): boolean {

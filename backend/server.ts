@@ -637,9 +637,7 @@ app.post('/api/admin/student/photo', authorizeAdmin, async (req: Request, res: R
     } catch (err) { res.status(500).json({ error: "Failed to upload" }); }
 });
 
-app.get('/api/photo/:uid', async (req: Request, res: Response) => {
-    const { token } = req.query;
-    if (token !== ADMIN_TOKEN && token !== USER_TOKEN) return res.status(401).send('Unauthorized');
+app.get('/api/photo/:uid', authorize, async (req, res) => {
     if (firestore) {
         const snapshot = await firestore.collection('students').where('uid', '==', req.params.uid).limit(1).get();
         if (!snapshot.empty && snapshot.docs[0].data().photo) {
