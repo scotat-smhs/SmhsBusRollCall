@@ -655,6 +655,14 @@ app.get('/api/student/:uid', authorize, async (req: Request, res: Response) => {
     else res.status(404).json({ error: "Student not found" });
 });
 
+app.get('/api/current-slot', authorize, async (req, res) => {
+    const info = getTimeSlotInfo();
+    const slot = info.label === defaultSlot.label 
+        ? defaultSlot.label 
+        : `${info.start}-${info.end}`;
+    res.json({ slot, label: info.label, csvType: info.csvType });
+});
+
 app.post('/api/rollcall/batch', authorize, async (req, res) => {
     try {
         const { records } = req.body;

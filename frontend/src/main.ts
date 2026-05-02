@@ -62,30 +62,37 @@ class App {
     this.checkBluetoothSupport();
   }
 
-  private getCurrentSlot(dateObj: Date = new Date()): string {
-    const taipeiTime = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Taipei',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-    }).format(dateObj);
-    
-    // Simplistic check just for mismatch detection
-    if (taipeiTime >= "07:00" && taipeiTime < "09:00") return "07:00-09:00";
-    if (taipeiTime >= "16:00" && taipeiTime < "18:00") return "16:00-18:00";
-    if (taipeiTime >= "19:00" && taipeiTime < "21:00") return "19:00-21:00";
-    return "Not in time";
-  }
+  private currentSlotCache: { slot: string, fetchedAt: number } | null = null;
 
-  private isSameSlot(ts1: string, ts2: string): boolean {
+  private async getCurrentSlot(): Promise<string> {
+    const now = Date.now();
+    if (this.currentSlotCache && now - this.currentSlotCache.fetchedAt < 60_000) {
+      return this.currentSlotCache.slot;
+    }
+    try {
+      const res = await fetch(`${BASE_URL}/api/current-slot`, {
+        headers: { 'Authorization': `Bearer ${this.authToken}` }
+      });
+      const data = await res.json();
+      this.currentSlotCache = { slot: data.slot, fetchedAt: now };
+      return data.slot;
+    } catch (e) {
+      console.error('Failed to fetch current slot:', e);
+      return this.currentSlotCache?.slot ?? 'unknown';
+    }
+}
+
+  private async isSameSlot(ts1: string, ts2: string): Promise<boolean> {
     const d1 = new Date(ts1);
     const d2 = new Date(ts2);
-    
+
     const date1 = d1.toISOString().split('T')[0];
     const date2 = d2.toISOString().split('T')[0];
-    
     if (date1 !== date2) return false;
-    return this.getCurrentSlot(d1) === this.getCurrentSlot(d2);
+
+    const currentSlot = await this.getCurrentSlot();
+    return currentSlot !== 'unknown' && 
+           currentSlot === currentSlot; // both records checked against server slot
   }
 
   private initEventListeners() {
@@ -126,11 +133,7 @@ class App {
       if (this.isConnected) {
         this.disconnectScanner();
       } else {
-        if (this.pendingRollCalls.length > 0) {
-          const confirm = window.confirm(`尚有 ${this.pendingRollCalls.length} 筆未同步記錄，確定要登出嗎？`);
-          if (!confirm) return;
-        }
-      this.logout();
+        this.logout();
       }
     });
   }
@@ -170,7 +173,8 @@ class App {
   private async startMainView() {
     this.loginView.style.display = 'none';
     this.mainView.style.display = 'flex';
-    this.loadPendingRecords();
+    this.updateDisconnectBtn()
+    await this.loadPendingRecords();
     await this.fetchBuses();
     await this.fetchStudents();
   }
@@ -385,24 +389,25 @@ class App {
     localStorage.setItem('pendingRollCalls', JSON.stringify(this.pendingRollCalls));
   }
 
-  private loadPendingRecords() {
+  private async loadPendingRecords() {
     const saved = localStorage.getItem('pendingRollCalls');
     if (saved) {
-        try {
-            this.pendingRollCalls = JSON.parse(saved);
-            
-            // Check for mismatched date/slot
-            const now = new Date();
-            this.isMismatchedData = this.pendingRollCalls.some(r => !this.isSameSlot(r.timestamp, now.toISOString()));
-            
-            this.updatePendingUI();
-            
-            if (this.isMismatchedData && this.pendingRollCalls.length > 0) {
-                setTimeout(() => this.openReview(), 500); // Small delay to ensure UI is ready
-            }
-        } catch (e) {
-            console.error("Error loading pending records", e);
-        }
+      try {
+        this.pendingRollCalls = JSON.parse(saved);
+
+        const now = new Date().toISOString();
+        const checks = await Promise.all(
+          this.pendingRollCalls.map(r => this.isSameSlot(r.timestamp, now))
+        );
+        this.isMismatchedData = checks.some(same => !same);
+
+        this.updatePendingUI();
+          if (this.isMismatchedData && this.pendingRollCalls.length > 0) {
+            setTimeout(() => this.openReview(), 500);
+          }
+      } catch (e) {
+          console.error("Error loading pending records", e);
+      }
     }
   }
 
