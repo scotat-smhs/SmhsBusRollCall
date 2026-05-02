@@ -91,13 +91,6 @@ class App {
   private initEventListeners() {
     // Login,Logout
     document.getElementById('login-btn')?.addEventListener('click', () => this.handleLogin());
-    document.getElementById('logout-btn')?.addEventListener('click', () => {
-      if (this.pendingRollCalls.length > 0) {
-        const confirm = window.confirm(`尚有 ${this.pendingRollCalls.length} 筆未同步記錄，確定要登出嗎？`);
-        if (!confirm) return;
-      }
-      this.logout();
-    });
 
     // Scanner
     document.getElementById('connect-ble-btn')?.addEventListener('click', () => this.connectScanner());
@@ -126,6 +119,19 @@ class App {
         this.busSelect.value = this.reviewBusSelect.value;
         this.updateUIColors();
         this.openReview(false); // Refresh list to update highlight, but don't re-init from main
+    });
+    
+    //Logout Button
+    document.getElementById('disconnect-btn')?.addEventListener('click', () => {
+      if (this.isConnected) {
+        this.disconnectScanner();
+      } else {
+        if (this.pendingRollCalls.length > 0) {
+          const confirm = window.confirm(`尚有 ${this.pendingRollCalls.length} 筆未同步記錄，確定要登出嗎？`);
+          if (!confirm) return;
+        }
+      this.logout();
+      }
     });
   }
 
@@ -250,12 +256,14 @@ class App {
       } catch (e) {}
 
       this.isConnected = true;
+      this.updateDisconnectBtn();
       this.updateStatus(true, "已連接");
       this.readyState.style.display = 'none';
       this.studentCard.style.display = 'block';
 
       this.bleDevice.addEventListener('gattserverdisconnected', () => {
         this.isConnected = false;
+        this.updateDisconnectBtn();
         this.updateStatus(false, "已斷開連接");
         this.readyState.style.display = 'flex';
         this.readyState.style.flexDirection = 'column';
@@ -558,6 +566,17 @@ class App {
     this.pendingRollCalls = [];
     this.mainView.style.display = 'none';
     this.loginView.style.display = 'flex';
+  }
+
+  private updateDisconnectBtn() {
+    const btn = document.getElementById('disconnect-btn')!;
+    if (this.isConnected) {
+      btn.textContent = '✕';
+      btn.title = '中斷連接';
+    } else {
+      btn.textContent = '🚪';
+      btn.title = '登出';
+    }
   }
 }
 
