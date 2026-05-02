@@ -323,21 +323,26 @@ class App {
   }
 
   private async fetchPhotoSecure(uid: string) {
+    const photoLoading = document.getElementById('photo-loading')!;
+    photoLoading.style.display = 'block';
     try {
-        const res = await fetch(`${BASE_URL}/api/photo/${uid}`, {
-          headers: { 'Authorization': `Bearer ${this.authToken}` }
-        });
-        if (!res.ok) return;
+      const res = await fetch(`${BASE_URL}/api/photo/${uid}`, {
+        headers: { 'Authorization': `Bearer ${this.authToken}` }
+      });
+      if (res.ok) {
         const blob = await res.blob();
-        if (uid === this.currentUid) { // ← now actually works
-            const photoEl = document.getElementById('student-photo') as HTMLImageElement;
-            if (photoEl.src.startsWith('blob:')) URL.revokeObjectURL(photoEl.src);
-            photoEl.src = URL.createObjectURL(blob);
+        if (uid === this.currentUid) {
+          const photoEl = document.getElementById('student-photo') as HTMLImageElement;
+          if (photoEl.src.startsWith('blob:')) URL.revokeObjectURL(photoEl.src);
+          photoEl.src = URL.createObjectURL(blob);
         }
+      }
     } catch (e) {
-        console.error(`fetchPhotoSecure error:`, e);
+      console.error('fetchPhotoSecure error:', e);
+    } finally {
+      photoLoading.style.display = 'none'; // always hide, even on error
     }
-}
+  }
 
   private isBusMatch(studentBus: string | undefined, selectedBus: string): boolean {
     if (!studentBus || !selectedBus) return false;
