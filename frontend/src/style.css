@@ -211,10 +211,7 @@ input:focus, select:focus {
 }
 
 #photo-loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  align-items: center;
   margin: 0; /* override the default spinner margin */
 }
 
