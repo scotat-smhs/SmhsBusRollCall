@@ -100,8 +100,7 @@ class App {
     document.getElementById('login-btn')?.addEventListener('click', () => this.handleLogin());
 
     // Scanner
-    document.getElementById('connect-ble-btn')?.addEventListener('click', () => this.connectScanner());
-    document.getElementById('disconnect-btn')?.addEventListener('click', () => this.disconnectScanner());
+    document.getElementById('connect-ble-btn')?.addEventListener('click', () => this.connectScanner());;
 
     // Review
     document.getElementById('review-btn')?.addEventListener('click', () => this.openReview());
