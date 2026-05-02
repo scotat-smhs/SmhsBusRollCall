@@ -133,7 +133,7 @@ class App {
       if (this.isConnected) {
         this.disconnectScanner();
       } else {
-        this.logout();
+        //this.logout();
       }
     });
   }
