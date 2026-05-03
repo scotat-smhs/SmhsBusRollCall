@@ -324,7 +324,7 @@ class App {
 
   private async fetchPhotoSecure(uid: string) {
     const photoLoading = document.getElementById('photo-loading')!;
-    photoLoading.style.display = 'block';
+    photoLoading.style.display = 'flex';
     try {
       const res = await fetch(`${BASE_URL}/api/photo/${uid}`, {
         headers: { 'Authorization': `Bearer ${this.authToken}` }
