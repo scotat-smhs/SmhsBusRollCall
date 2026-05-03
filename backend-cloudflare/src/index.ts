@@ -96,7 +96,7 @@ app.post('/api/login', async (c) => {
   
   if (user && user.password === password) {
     const isAdmin = (user.type === 'admin' || username === 'admin');
-    const token = isAdmin ? ADMIN_TOKEN : USER_TOKEN;
+    const token = isAdmin ? c.env.ADMIN_TOKEN : c.env.USER_TOKEN; // ← fix this line
     return c.json({ token, user: { name: user.name, username, type: isAdmin ? 'admin' : 'user' } });
   }
   
