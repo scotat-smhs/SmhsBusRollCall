@@ -427,7 +427,7 @@
     <!-- 4. Logic -->
     <script>
         const BASE_URL = localStorage.getItem('apiUrl') || 
-                        (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:5001' : 'https://bus-rollcall-api.vercel.app');
+                        (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:5001' : 'https://bus-rollcall-backend.s211009.workers.dev');
 
         let authToken = localStorage.getItem('adminToken') || '';
         let adminName = localStorage.getItem('adminName') || '管理員';

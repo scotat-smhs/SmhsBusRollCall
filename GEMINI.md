@@ -6,6 +6,7 @@ A multi-platform system for scanning RFID cards to perform bus roll calls. The s
 
 - **Hardware (ESP32-C3 SuperMini):** Scans RC522 RFID tags, provides buzzer feedback, and broadcasts data over BLE.
 - **Backend (Express/TypeScript):** 100% cloud-native server running on **Vercel** or **Raspberry Pi**, using **Firestore** for all storage.
+- **Backend (Cloudflare Workers/Hono):** Alternative serverless backend using **Cloudflare D1** (SQLite) for storage.
 - **iOS App (SwiftUI):** Native app with local recording, manual review, instant local-only lookups, and batch sync.
 - **User Dashboard (Vite/TS):** Web-based scanner interface utilizing Web Bluetooth (GATT) with instant local-only lookups.
 - **Admin Panel (Vite/HTML):** management interface for exports, temporary rider assignments, and a native Firestore Photo Library.
@@ -36,6 +37,14 @@ Native grid-style gallery in the Admin Panel for managing student photos.
 - Secure Serving: Token-based access for browser `<img>` tags.
 
 ## Deployment
+
+### Cloudflare Workers (D1)
+The project includes a Cloudflare Worker backend in `backend-cloudflare/`.
+- **Database:** Uses Cloudflare D1.
+- **Commands:**
+    - `npm run db:init`: Initialize the database schema locally.
+    - `npm run dev`: Start local development server.
+    - `npm run deploy`: Deploy to Cloudflare Workers.
 
 ### Vercel (Cloud)
 The project is optimized for Vercel Serverless Functions.

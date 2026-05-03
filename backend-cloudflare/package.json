@@ -1,0 +1,20 @@
+{
+  "name": "bus-rollcall-backend-cf",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types",
+    "db:init": "wrangler d1 execute bus-rollcall-db --local --file=./schema.sql",
+    "db:migrate": "wrangler d1 migrations create bus-rollcall-db"
+  },
+  "dependencies": {
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260503.1",
+    "wrangler": "^4.87.0"
+  }
+}
