@@ -590,10 +590,10 @@ class App {
     const btn = document.getElementById('disconnect-btn')!;
     const btnimg = document.getElementById('disconnect-img') as HTMLImageElement;;
     if (this.isConnected) {
-      btnimg.src = '✕';
+      //btnimg.src = '✕';
       btn.title = '中斷連接';
     } else {
-      btnimg.src = './assets/Logout.png';
+      //btnimg.src = './assets/Logout.png';
       btn.title = '登出';
     }
   }
