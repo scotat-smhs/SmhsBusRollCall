@@ -593,7 +593,7 @@ class App {
       //btnimg.src = '✕';
       btn.title = '中斷連接';
     } else {
-      //btnimg.src = './assets/Logout.png';
+      btnimg.src = '../assets/Logout.png';
       btn.title = '登出';
     }
   }
