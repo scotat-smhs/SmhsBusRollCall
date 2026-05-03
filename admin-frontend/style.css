@@ -62,6 +62,20 @@ button {
     margin-top: 10px;
 }
 
+#days-dropdown label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    white-space: nowrap;
+    gap: 6px;
+}
+
+#days-dropdown input[type="checkbox"] {
+    width: auto;  /* ← overrides the global width: 100% */
+    margin: 0;
+    flex-shrink: 0;
+}
+
 .primary-btn { background-color: var(--primary); color: white; }
 .primary-btn:hover { background-color: #0077ed; }
 .secondary-btn { background-color: #e8e8ed; color: var(--text); }

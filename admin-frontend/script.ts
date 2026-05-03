@@ -57,9 +57,26 @@ function toggleDaysDropdown(e: Event): void {
 }
 
 // Close dropdown when clicking outside
-document.addEventListener('click', () => {
+document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('days-dropdown') as HTMLElement;
-    if (dropdown) dropdown.style.display = 'none';
+    if (dropdown && !dropdown.contains(e.target as Node) && !(e.target as HTMLElement).closest('button[onclick="toggleDaysDropdown(event)"]')) {
+        dropdown.style.display = 'none';
+    }
+});
+
+document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.delete-btn') as HTMLElement;
+    if (!btn) return;
+    const index = parseInt(btn.dataset.index!);
+    if (isNaN(index)) return;
+    const type = btn.dataset.type;
+    if (type === 'account') {
+        accounts.splice(index, 1);
+        renderAccounts();
+    } else {
+        slotConfigs.splice(index, 1);
+        renderSlots();
+    }
 });
 
 // Expose functions to window for inline onclick handlers
@@ -82,6 +99,8 @@ document.addEventListener('click', () => {
 (window as any).saveSlots = saveSlots;
 (window as any).updateDefaultSlot = updateDefaultSlot;
 (window as any).resetToDefaults = resetToDefaults;
+(window as any).openPhotoFolder = openPhotoFolder;
+(window as any).closePhotoFolder = closePhotoFolder;
 (window as any).fetchPhotos = fetchPhotos;
 (window as any).renderPhotos = renderPhotos;
 (window as any).filterPhotos = filterPhotos;
@@ -255,7 +274,7 @@ function renderAccounts(): void {
                 </select>
             </td>
             <td>
-                ${isSelf ? '' : `<button class="delete-btn" onclick="accounts.splice(${index},1);renderAccounts()">刪除</button>`}
+                ${isSelf ? '' : `<button class="delete-btn" data-index="${index}" data-type="account">刪除</button>`}
             </td>
         `;
         body.appendChild(tr);
@@ -373,7 +392,7 @@ function renderSlots(): void {
         if (s.day !== undefined) dText = `週${days[s.day]}`;
         else if (s.days) dText = s.days.map(d => days[d]).join(',');
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${dText}</td><td>${s.start}</td><td>${s.end}</td><td>${CSV_TYPE_MAP[s.csvType] || s.csvType}</td><td>${s.label}</td><td>${s.isTemp?'臨時':'永久'}</td><td><button class="delete-btn" onclick="slotConfigs.splice(${i},1);renderSlots()">刪除</button></td>`;
+        tr.innerHTML = `<td>${dText}</td><td>${s.start}</td><td>${s.end}</td><td>${CSV_TYPE_MAP[s.csvType] || s.csvType}</td><td>${s.label}</td><td>${s.isTemp?'臨時':'永久'}</td><td><button class="delete-btn" data-index="${i}">刪除</button></td>`;
         body.appendChild(tr);
     });
 }
@@ -445,6 +464,16 @@ function resetToDefaults(): void {
     }
 }
 
+function openPhotoFolder(cls: string): void {
+    currentPhotoFolder = cls;
+    renderPhotos(allPhotos);
+}
+
+function closePhotoFolder(): void {
+    currentPhotoFolder = null;
+    renderPhotos(allPhotos);
+}
+
 async function fetchPhotos(): Promise<void> {
     const grid = document.getElementById('photo-grid') as HTMLElement;
     grid.innerHTML = '<div class="spinner"></div>';
@@ -474,7 +503,7 @@ function renderPhotos(photos: any[]): void {
                 <div class="photo-card-actions">
                     <button class="photo-action-btn delete" title="批量刪除此目錄所有相片" onclick="event.stopPropagation(); deleteFolderPhotos('${cls}')">✕</button>
                 </div>
-                <div class="photo-card-img" style="background: #e3f2fd; flex-direction: column; gap: 10px; cursor: pointer;" onclick="currentPhotoFolder = '${cls}'; renderPhotos(allPhotos);">
+                <div class="photo-card-img" style="background: #e3f2fd; flex-direction: column; gap: 10px; cursor: pointer;" onclick="openPhotoFolder('${cls}')">
                     <svg width="60" height="60" viewBox="0 0 24 24" fill="#1976d2"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
                     <span style="font-weight: 600; color: #1976d2;">${cls}</span>
                 </div>
@@ -498,7 +527,7 @@ function renderPhotos(photos: any[]): void {
         header.style.borderRadius = '10px';
         header.innerHTML = `
             <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="secondary-btn" style="width: auto; margin: 0; padding: 5px 10px;" onclick="currentPhotoFolder = null; renderPhotos(allPhotos);">← 返回</button>
+                <button class="secondary-btn" style="width: auto; margin: 0; padding: 5px 10px;" onclick="closePhotoFolder()">← 返回</button>
                 <h2 style="font-size: 16px; color: var(--text); margin: 0;">目錄: ${currentPhotoFolder} (${classPhotos.length})</h2>
             </div>
             <button class="delete-btn" style="font-weight: 600; font-size: 12px;" onclick="deleteFolderPhotos('${currentPhotoFolder}')">批量刪除此目錄相片</button>
