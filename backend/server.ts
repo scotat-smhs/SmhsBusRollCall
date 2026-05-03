@@ -559,9 +559,19 @@ app.get('/api/admin/photos', authorizeAdmin, async (req: Request, res: Response)
         try {
             const snapshot = await firestore.collection('students').orderBy('name').get();
             const photos: any[] = [];
+            const seenUids = new Set();
             snapshot.forEach(doc => {
                 const data = doc.data();
-                if (data.photo) photos.push({ uid: data.uid, name: data.name, badge: data.badge, class: data.class });
+                if (data.uid && !seenUids.has(data.uid)) {
+                    photos.push({ 
+                        uid: data.uid, 
+                        name: data.name, 
+                        badge: data.badge, 
+                        class: data.class,
+                        hasPhoto: !!data.photo 
+                    });
+                    seenUids.add(data.uid);
+                }
             });
             res.json(photos);
         } catch (err) { res.status(500).json({ error: "Failed to fetch photos" }); }
