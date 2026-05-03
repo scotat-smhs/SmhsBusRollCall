@@ -50,7 +50,20 @@ async function downloadListCSV(type: 'students' | 'buses', csvTypeParam?: string
     } else { alert('下載失敗'); }
 }
 
+function toggleDaysDropdown(e: Event): void {
+    e.stopPropagation();
+    const dropdown = document.getElementById('days-dropdown') as HTMLElement;
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', () => {
+    const dropdown = document.getElementById('days-dropdown') as HTMLElement;
+    if (dropdown) dropdown.style.display = 'none';
+});
+
 // Expose functions to window for inline onclick handlers
+(window as any).toggleDaysDropdown = toggleDaysDropdown;
 (window as any).downloadListCSV = downloadListCSV;
 (window as any).openSettings = openSettings;
 (window as any).saveSettings = saveSettings;

@@ -232,14 +232,19 @@
                             <tfoot>
                                 <tr style="background: #fbfbfd; border-top: 2px solid #eee;">
                                     <td>
-                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 11px;">
-                                            <label><input type="checkbox" name="slot-day" value="1"> 一</label>
-                                            <label><input type="checkbox" name="slot-day" value="2"> 二</label>
-                                            <label><input type="checkbox" name="slot-day" value="3"> 三</label>
-                                            <label><input type="checkbox" name="slot-day" value="4"> 四</label>
-                                            <label><input type="checkbox" name="slot-day" value="5"> 五</label>
-                                            <label><input type="checkbox" name="slot-day" value="6"> 六</label>
-                                            <label><input type="checkbox" name="slot-day" value="0"> 日</label>
+                                        <div style="position: relative;">
+                                            <button type="button" class="secondary-btn" onclick="toggleDaysDropdown(event)" style="padding: 5px 10px; font-size: 11px; margin: 0;">選擇日期 ▼</button>
+                                            <div id="days-dropdown" style="display: none; position: absolute; z-index: 100; background: white; border: 1px solid #d2d2d7; padding: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 12px; min-width: 120px;">
+                                                    <label><input type="checkbox" name="slot-day" value="1"> 一</label>
+                                                    <label><input type="checkbox" name="slot-day" value="2"> 二</label>
+                                                    <label><input type="checkbox" name="slot-day" value="3"> 三</label>
+                                                    <label><input type="checkbox" name="slot-day" value="4"> 四</label>
+                                                    <label><input type="checkbox" name="slot-day" value="5"> 五</label>
+                                                    <label><input type="checkbox" name="slot-day" value="6"> 六</label>
+                                                    <label><input type="checkbox" name="slot-day" value="0"> 日</label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td><input type="text" id="new-slot-start" placeholder="07:00" class="table-input"></td>
