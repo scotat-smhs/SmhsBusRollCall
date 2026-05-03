@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bus Roll Call</title>
@@ -30,17 +31,19 @@
             <header class="glass-header">
                 <div class="header-top">
                     <button id="disconnect-btn" class="icon-btn">
-                        <img id= "disconnect-img" src="./assets/Logout.png" alt="logout">
+                        <span id="disconnect-img" class="material-symbols-outlined">logout</span>
                     </button>
                     <div class="connection-status">
                         <div id="status-dot" class="dot disconnected"></div>
                         <span id="status-text">未連接</span>
                     </div>
                     <div id="battery-info" class="battery-info" style="display: flex;">
-                        <span id="battery-icon">⚡</span>
+                        <span class="material-symbols-outlined">battery_full</span>
                         <span id="battery-level">--</span>%
                     </div>
-                    <button id="refresh-btn" class="icon-btn" title="重新載入資料">⟳</button>
+                    <button id="refresh-btn" class="icon-btn" title="重新載入資料">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </button>
                 </div>
                 
                 <div class="bus-selector-container">
@@ -54,7 +57,9 @@
             <main class="content">
                 <!-- Ready State -->
                 <div id="ready-state" class="empty-state">
-                    <div class="rfid-icon">📡</div>
+                    <div class="rfid-icon">
+                        <span class="material-symbols-outlined">sensors</span>
+                    </div>
                     <h2>準備掃描</h2>
                     <p>請將卡片靠近掃描器</p>
                     <button id="connect-ble-btn" class="primary-btn pulse">連接掃描器</button>
@@ -91,7 +96,8 @@
             <!-- Bottom Action -->
             <footer id="sync-footer" style="display: none;">
                 <button id="review-btn" class="sync-btn">
-                    <span>📋 預覽與同步</span>
+                    <span class="material-symbols-outlined">list_alt</span>
+                    <span>預覽與同步</span>
                     <span id="pending-count" class="badge-count">0</span>
                 </button>
             </footer>

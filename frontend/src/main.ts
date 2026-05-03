@@ -587,14 +587,11 @@ class App {
   }
 
   private updateDisconnectBtn() {
-    const btn = document.getElementById('disconnect-btn')!;
-    const btnimg = document.getElementById('disconnect-img') as HTMLImageElement;;
+    const img = document.getElementById('disconnect-img')!;
     if (this.isConnected) {
-      //btnimg.src = '✕';
-      btn.title = '中斷連接';
+        img.textContent = 'link_off';
     } else {
-      btnimg.src = './assets/Logout.png';
-      btn.title = '登出';
+      img.textContent = 'logout';
     }
   }
 }
