@@ -360,7 +360,7 @@ function renderSlots(): void {
         if (s.day !== undefined) dText = `週${days[s.day]}`;
         else if (s.days) dText = s.days.map(d => days[d]).join(',');
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${dText}</td><td>${s.start}</td><td>${s.end}</td><td>${s.csvType}</td><td>${s.label}</td><td>${s.isTemp?'臨時':'永久'}</td><td><button class="delete-btn" onclick="slotConfigs.splice(${i},1);renderSlots()">刪除</button></td>`;
+        tr.innerHTML = `<td>${dText}</td><td>${s.start}</td><td>${s.end}</td><td>${CSV_TYPE_MAP[s.csvType] || s.csvType}</td><td>${s.label}</td><td>${s.isTemp?'臨時':'永久'}</td><td><button class="delete-btn" onclick="slotConfigs.splice(${i},1);renderSlots()">刪除</button></td>`;
         body.appendChild(tr);
     });
 }
