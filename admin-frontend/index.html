@@ -100,7 +100,7 @@
                     <div class="form-group"><label>學生姓名</label><input type="text" id="temp-name" placeholder="姓名"></div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group"><label>學號 (選填)</label><input type="text" id="temp-badge" placeholder="學號"></div>
-                        <div class="form-group"><label>班級 (選填)</label><input type="text" id="temp-class" placeholder="例如: 301"></div>
+                        <div class="form-group"><label>班級 (選填)</label><input type="text" id="temp-class" placeholder="例如: 普一忠/國八孝"></div>
                     </div>
                     
                     <div id="occupancy-info" class="preview-container" style="display: none; margin-bottom: 15px; background: #e1f5fe; color: #01579b; border: none;">
@@ -212,10 +212,10 @@
                             <div class="form-group" style="margin: 0;">
                                 <label style="font-size: 11px;">對應名單類型</label>
                                 <select id="default-slot-csv" class="table-input" onchange="updateDefaultSlot()">
-                                    <option value="arrival">早上名單</option>
-                                    <option value="full_departure">下午名單</option>
-                                    <option value="night_class_afternoon">夜間下午名單</option>
-                                    <option value="night_class_night">夜間晚上名單</option>
+                                    <option value="arrival">早上</option>
+                                    <option value="full_departure">大放學</option>
+                                    <option value="night_class_afternoon">夜輔下午放學</option>
+                                    <option value="night_class_night">夜輔晚上放學</option>
                                 </select>
                             </div>
                             <div class="form-group" style="margin: 0;">
