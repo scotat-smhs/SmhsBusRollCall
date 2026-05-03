@@ -588,11 +588,12 @@ class App {
 
   private updateDisconnectBtn() {
     const btn = document.getElementById('disconnect-btn')!;
+    const btnimg = document.getElementById('disconnect-img') as HTMLImageElement;;
     if (this.isConnected) {
-      btn.textContent = '✕';
+      btnimg.src = '✕';
       btn.title = '中斷連接';
     } else {
-      btn.textContent = '➜]';
+      btnimg.src = './assets/Logout.png';
       btn.title = '登出';
     }
   }
