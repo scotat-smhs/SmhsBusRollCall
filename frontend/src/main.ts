@@ -110,6 +110,7 @@ class App {
     const refreshBtn = document.getElementById('refresh-btn')!;
     refreshBtn.addEventListener('click', async () => {
         refreshBtn.classList.add('spinning');
+        await this.updateTimeslotDisplay();
         await this.fetchBuses();
         await this.fetchStudents();
         refreshBtn.classList.remove('spinning');
@@ -172,10 +173,17 @@ class App {
   private async startMainView() {
     this.loginView.style.display = 'none';
     this.mainView.style.display = 'flex';
-    this.updateDisconnectBtn()
+    this.updateDisconnectBtn();
+    this.updateTimeslotDisplay();
     await this.loadPendingRecords();
     await this.fetchBuses();
     await this.fetchStudents();
+  }
+
+  private async updateTimeslotDisplay() {
+    const slot = await this.getCurrentSlot();
+    const timeslotText = document.getElementById('timeslot-text')!;
+    timeslotText.textContent = slot;
   }
 
   private async fetchBuses() {
