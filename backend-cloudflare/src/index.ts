@@ -3,22 +3,22 @@ import { cors } from 'hono/cors';
 
 type Bindings = {
   DB: D1Database;
+  ADMIN_TOKEN: string;
+  USER_TOKEN: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 app.use('*', cors());
 
-// Simple Auth Middleware (matching original)
-const ADMIN_TOKEN = "secret-bus-admin-2026";
-const USER_TOKEN = "secret-bus-token-2026";
-
 const authorize = async (c: any, next: any) => {
   const authHeader = c.req.header('Authorization');
   const queryToken = c.req.query('token');
-  const token = (authHeader && authHeader.startsWith('Bearer ')) ? authHeader.substring(7) : queryToken;
+  const token = (authHeader && authHeader.startsWith('Bearer ')) 
+    ? authHeader.substring(7) 
+    : queryToken;
   
-  if (token === ADMIN_TOKEN || token === USER_TOKEN) {
+  if (token === c.env.ADMIN_TOKEN || token === c.env.USER_TOKEN) {
     await next();
   } else {
     return c.json({ error: "Unauthorized" }, 401);
@@ -28,9 +28,11 @@ const authorize = async (c: any, next: any) => {
 const authorizeAdmin = async (c: any, next: any) => {
   const authHeader = c.req.header('Authorization');
   const queryToken = c.req.query('token');
-  const token = (authHeader && authHeader.startsWith('Bearer ')) ? authHeader.substring(7) : queryToken;
+  const token = (authHeader && authHeader.startsWith('Bearer ')) 
+    ? authHeader.substring(7) 
+    : queryToken;
   
-  if (token === ADMIN_TOKEN) {
+  if (token === c.env.ADMIN_TOKEN) {
     await next();
   } else {
     return c.json({ error: "Forbidden: Admin access required" }, 403);

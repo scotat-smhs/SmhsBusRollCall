@@ -459,10 +459,20 @@
             const status = document.getElementById('testStatus');
             status.textContent = '測試中...';
             try {
-                const res = await fetch(`${url}/api/buses`, { headers: { 'Authorization': `Bearer secret-bus-token-2026` } });
-                if (res.status === 401 || res.ok) { status.textContent = '連接成功！'; status.className = 'status-msg success'; }
-                else { status.textContent = '連接失敗'; status.className = 'status-msg error'; }
-            } catch (err) { status.textContent = '網路錯誤'; status.className = 'status-msg error'; }
+                const res = await fetch(`${url}/api/buses`, { 
+                    headers: { 'Authorization': `Bearer ${authToken || ''}` }
+                });
+                if (res.status === 401 || res.ok) { 
+                    status.textContent = '連接成功！'; 
+                    status.className = 'status-msg success'; 
+                } else { 
+                    status.textContent = '連接失敗'; 
+                    status.className = 'status-msg error'; 
+                }
+            } catch (err) { 
+                status.textContent = '網路錯誤'; 
+                status.className = 'status-msg error'; 
+            }
         }
 
         async function login() {
