@@ -6,3 +6,18 @@ compatibility_date = "2024-04-03"
 binding = "DB"
 database_name = "bus-rollcall-db"
 database_id = "c05d960e-2a56-47b5-89d4-b0e24ef7db94"
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
