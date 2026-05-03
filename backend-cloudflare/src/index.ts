@@ -105,9 +105,11 @@ app.post('/api/login', async (c) => {
 
 app.get('/api/buses', authorize, async (c) => {
   const { slots, default: defaultSlot } = await getSlotConfigs(c.env.DB);
+  const queryCsvType = c.req.query('csvType');
   const info = getTimeSlotInfo(slots, defaultSlot);
   
-  const configKey = `buses_${info.csvType}`;
+  const csvType = queryCsvType || info.csvType;
+  const configKey = `buses_${csvType}`;
   let busesJson = await c.env.DB.prepare("SELECT value FROM config WHERE key = ?").bind(configKey).first<string>("value");
   
   if (!busesJson) {
@@ -119,6 +121,7 @@ app.get('/api/buses', authorize, async (c) => {
 
 app.get('/api/students', authorize, async (c) => {
   const queryDate = c.req.query('date');
+  const queryCsvType = c.req.query('csvType');
   const now = new Date();
   const taipeiDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
   const currentDateStr = taipeiDate.getFullYear() + '-' + String(taipeiDate.getMonth() + 1).padStart(2, '0') + '-' + String(taipeiDate.getDate()).padStart(2, '0');
@@ -127,24 +130,25 @@ app.get('/api/students', authorize, async (c) => {
   const { slots, default: defaultSlot } = await getSlotConfigs(c.env.DB);
   const timeSlot = getTimeSlot(slots, defaultSlot, now);
   const info = getTimeSlotInfo(slots, defaultSlot, now);
+  const activeCsvType = queryCsvType || info.csvType;
 
   const students: Record<string, any> = {};
 
-  // 1. Fetch Students for the current slot type
-  const { results: studentList } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = ?").bind(info.csvType).all<any>();
-  studentList.forEach(s => {
+  // 1. Fetch Master Students (arrival) as a base
+  const { results: masterList } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = 'arrival'").all<any>();
+  masterList.forEach(s => {
     students[s.uid] = s;
   });
 
-  // Fallback if empty or arrival
-  if (info.csvType === "arrival" || studentList.length === 0) {
-    const { results: allStudents } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = 'arrival'").all<any>();
-    allStudents.forEach(s => {
-      if (!students[s.uid]) students[s.uid] = s;
+  // 2. Fetch Current Slot Students to OVERRIDE (if not arrival)
+  if (activeCsvType !== 'arrival') {
+    const { results: slotList } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = ?").bind(activeCsvType).all<any>();
+    slotList.forEach(s => {
+      students[s.uid] = s;
     });
   }
 
-  // 2. Fetch Temporary Riders
+  // 3. Fetch Temporary Riders (Highest Priority Override)
   const { results: temps } = await c.env.DB.prepare("SELECT * FROM temporary_riders WHERE date = ? AND timeSlot = ?")
     .bind(targetDateStr, timeSlot)
     .all<any>();

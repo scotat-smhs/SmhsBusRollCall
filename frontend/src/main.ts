@@ -62,23 +62,26 @@ class App {
     this.checkBluetoothSupport();
   }
 
-  private currentSlotCache: { slot: string, fetchedAt: number } | null = null;
+  private currentSlotCache: { slot: string, csvType: string, fetchedAt: number } | null = null;
 
-  private async getCurrentSlot(): Promise<string> {
+  private async getCurrentSlot(): Promise<{ slot: string, csvType: string }> {
     const now = Date.now();
     if (this.currentSlotCache && now - this.currentSlotCache.fetchedAt < 60_000) {
-      return this.currentSlotCache.slot;
+      return { slot: this.currentSlotCache.slot, csvType: this.currentSlotCache.csvType };
     }
     try {
       const res = await fetch(`${BASE_URL}/api/current-slot`, {
         headers: { 'Authorization': `Bearer ${this.authToken}` }
       });
       const data = await res.json();
-      this.currentSlotCache = { slot: data.slot, fetchedAt: now };
-      return data.slot;
+      this.currentSlotCache = { slot: data.slot, csvType: data.csvType, fetchedAt: now };
+      return { slot: data.slot, csvType: data.csvType };
     } catch (e) {
       console.error('Failed to fetch current slot:', e);
-      return this.currentSlotCache?.slot ?? 'unknown';
+      return { 
+        slot: this.currentSlotCache?.slot ?? 'unknown', 
+        csvType: this.currentSlotCache?.csvType ?? 'arrival' 
+      };
     }
 }
 
@@ -90,7 +93,7 @@ class App {
     const date2 = d2.toISOString().split('T')[0];
     if (date1 !== date2) return false;
 
-    const currentSlot = await this.getCurrentSlot();
+    const { slot: currentSlot } = await this.getCurrentSlot();
     return currentSlot !== 'unknown' && 
            currentSlot === currentSlot; // both records checked against server slot
   }
@@ -110,9 +113,9 @@ class App {
     const refreshBtn = document.getElementById('refresh-btn')!;
     refreshBtn.addEventListener('click', async () => {
         refreshBtn.classList.add('spinning');
-        await this.updateTimeslotDisplay();
-        await this.fetchBuses();
-        await this.fetchStudents();
+        const csvType = await this.updateTimeslotDisplay();
+        await this.fetchBuses(csvType);
+        await this.fetchStudents(csvType);
         refreshBtn.classList.remove('spinning');
         alert("資料已更新！");
     });
@@ -174,21 +177,25 @@ class App {
     this.loginView.style.display = 'none';
     this.mainView.style.display = 'flex';
     this.updateDisconnectBtn();
-    this.updateTimeslotDisplay();
+    const csvType = await this.updateTimeslotDisplay();
     await this.loadPendingRecords();
-    await this.fetchBuses();
-    await this.fetchStudents();
+    await this.fetchBuses(csvType);
+    await this.fetchStudents(csvType);
   }
 
   private async updateTimeslotDisplay() {
-    const slot = await this.getCurrentSlot();
+    const { slot, csvType } = await this.getCurrentSlot();
     const timeslotText = document.getElementById('timeslot-text')!;
     timeslotText.textContent = slot;
+    return csvType;
   }
 
-  private async fetchBuses() {
+  private async fetchBuses(csvType?: string) {
     try {
-      const res = await fetch(`${BASE_URL}/api/buses`, {
+      let url = `${BASE_URL}/api/buses`;
+      if (csvType) url += `?csvType=${csvType}`;
+
+      const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${this.authToken}` }
       });
       const buses = await res.json();
@@ -212,7 +219,7 @@ class App {
     } catch (err) { console.error("Bus fetch error", err); }
   }
 
-  private async fetchStudents() {
+  private async fetchStudents(csvType?: string) {
     try {
       // Get current date in Taipei (UTC+8)
       const taipeiDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
@@ -220,7 +227,10 @@ class App {
                      String(taipeiDate.getMonth() + 1).padStart(2, '0') + '-' + 
                      String(taipeiDate.getDate()).padStart(2, '0');
       
-      const res = await fetch(`${BASE_URL}/api/students?date=${dateStr}`, {
+      let url = `${BASE_URL}/api/students?date=${dateStr}`;
+      if (csvType) url += `&csvType=${csvType}`;
+
+      const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${this.authToken}` }
       });
       this.allStudents = await res.json();
