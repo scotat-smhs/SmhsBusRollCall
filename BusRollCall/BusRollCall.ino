@@ -71,7 +71,7 @@ void setup() {
   rfid.PCD_Init();
   pinMode(BATTERY_PIN, INPUT);
 
-  BLEDevice::init("Smhs-Scanner-5");
+  BLEDevice::init("Smhs-Scanner-2");
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
