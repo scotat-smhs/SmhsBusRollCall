@@ -401,7 +401,7 @@ app.get('/api/placeholder', async (c) => {
 });
 
 app.get('/api/admin/photos', authorizeAdmin, async (c) => {
-    const { results } = await c.env.DB.prepare("SELECT uid, name, badge, class FROM students WHERE photo IS NOT NULL ORDER BY name").all();
+    const { results } = await c.env.DB.prepare("SELECT uid, name, badge, class FROM students WHERE photo IS NOT NULL GROUP BY uid ORDER BY name").all();
     return c.json(results);
 });
 

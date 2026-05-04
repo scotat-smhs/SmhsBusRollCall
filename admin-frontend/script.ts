@@ -464,9 +464,28 @@ function resetToDefaults(): void {
     }
 }
 
-function openPhotoFolder(cls: string): void {
+async function openPhotoFolder(cls: string): Promise<void> {
     currentPhotoFolder = cls;
-    renderPhotos(allPhotos);
+    const grid = document.getElementById('photo-grid') as HTMLElement;
+
+    if (allPhotos.length === 0) {
+        grid.innerHTML = '<div class="spinner"></div>'; // Show spinner while fetching
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/photos`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+            if (res.ok) {
+                allPhotos = await res.json();
+                renderPhotos(allPhotos); // renderPhotos will filter by currentPhotoFolder
+            } else {
+                grid.innerHTML = '載入照片失敗';
+            }
+        } catch (err) {
+            grid.innerHTML = '網路錯誤';
+            console.error(err);
+        }
+    } else {
+        // If photos are already loaded, just re-render with the new folder context
+        renderPhotos(allPhotos);
+    }
 }
 
 function closePhotoFolder(): void {

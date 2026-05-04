@@ -162,7 +162,16 @@ class App {
       if (this.isConnected) {
         this.disconnectScanner();
       } else {
-        this.logout();
+        // If not connected, handle logout or potential data loss
+        if (this.pendingRollCalls.length > 0) {
+            // If there are pending records, open the review modal to prompt the user
+            // The review modal will now need a "Logout and Clear Data" option
+            this.openReview();
+            // We will add the logout logic *within* the openReview modal context in a subsequent step
+        } else {
+            // If no pending records, proceed directly to logout
+            this.logout();
+        }
       }
     });
   }
@@ -545,6 +554,76 @@ class App {
         });
         this.reviewList.appendChild(item);
     });
+
+    // Add a container for the logout confirmation
+    const logoutConfirmationContainer = document.createElement('div');
+    logoutConfirmationContainer.id = 'logout-confirmation-container';
+    logoutConfirmationContainer.style.marginTop = '20px';
+    logoutConfirmationContainer.style.padding = '15px';
+    logoutConfirmationContainer.style.background = '#f0fff0'; // Light green background for confirmation
+    logoutConfirmationContainer.style.borderRadius = '10px';
+    logoutConfirmationContainer.style.border = '1px solid #d0f0d0';
+    logoutConfirmationContainer.style.textAlign = 'center';
+    logoutConfirmationContainer.style.display = 'none'; // Initially hidden
+
+    const logoutMessage = document.createElement('p');
+    logoutMessage.textContent = "您有未同步的資料。點擊下方按鈕將清除這些資料並登出。";
+    logoutMessage.style.marginBottom = '15px';
+    logoutMessage.style.fontSize = '14px';
+    logoutMessage.style.color = '#333';
+
+    const logoutButton = document.createElement('button');
+    logoutButton.textContent = "登出並清除資料";
+    logoutButton.className = 'primary-btn'; // Assuming a primary button style exists
+    logoutButton.style.padding = '10px 20px';
+    logoutButton.style.borderRadius = '5px';
+    logoutButton.style.border = 'none';
+    logoutButton.style.cursor = 'pointer';
+    logoutButton.style.backgroundColor = '#e74c3c'; // Red color for critical action
+    logoutButton.style.color = 'white';
+    logoutButton.style.fontWeight = 'bold';
+
+    logoutButton.addEventListener('click', () => {
+        // Clear pending roll calls and then logout
+        this.pendingRollCalls = []; // Clear the array
+        this.savePendingRecords(); // Save the cleared state
+        this.updatePendingUI(); // Update UI to reflect no pending items
+        this.logout(); // Perform the logout
+        this.reviewSheet.style.display = 'none'; // Close the review modal
+    });
+
+    logoutConfirmationContainer.appendChild(logoutMessage);
+    logoutConfirmationContainer.appendChild(logoutButton);
+
+    // Append the logout confirmation container *before* the summary
+    this.reviewList.appendChild(logoutConfirmationContainer);
+
+
+    // Check if this review was opened due to mismatched data or logout intent
+    // We'll need a way to signal if logout is the intent. For now, assume if pendingRollCalls > 0 and not syncing, it's for logout.
+    // We will make this container visible if pendingRollCalls > 0
+    if (this.pendingRollCalls.length > 0) {
+         // If this review was opened because of logout intent (or mismatched data before logout)
+         // We need to check if it was specifically opened from the disconnect button with pending data
+         // For now, let's assume if pending items exist, this confirmation should be visible.
+        logoutConfirmationContainer.style.display = 'block';
+
+        // Also, disable the close button if this is a forced review for logout
+        if (this.isMismatchedData) { // Re-using isMismatchedData to imply a forced review context
+             cancelBtn.style.display = 'none';
+             // Add back the warning message if it's mismatched data too
+            const warning = document.createElement('div');
+            warning.className = 'error-text';
+            warning.style.textAlign = 'center';
+            warning.style.marginBottom = '15px';
+            warning.style.padding = '10px';
+            warning.style.background = '#fff0f0';
+            warning.style.borderRadius = '10px';
+            warning.textContent = "⚠️ 偵測到不同時段的舊資料。"; // Simplified message
+            this.reviewList.prepend(warning); // Prepend the warning
+        }
+    }
+
 
     this.reviewSummary.innerHTML = `
         <div class="summary-pills">
