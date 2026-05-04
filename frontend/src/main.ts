@@ -280,8 +280,8 @@ class App {
     }
     try {
       this.bleDevice = await navigator.bluetooth.requestDevice({
-        filters: [{ services: [SERVICE_UUID] }],
-        optionalServices: [BATTERY_SERVICE_UUID]
+        acceptAllDevices: true,
+        optionalServices: [SERVICE_UUID, BATTERY_SERVICE_UUID]
       });
 
       this.updateStatus(true, "正在連接...");
