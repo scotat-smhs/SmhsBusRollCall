@@ -638,7 +638,8 @@ async function uploadBulkPhotos(): Promise<void> {
     let count = 0;
     for (let i = 0; i < files.length; i++) {
         const f = files[i];
-        const badge = f.name.split('.')[0];
+        const filenameWithoutExt = f.name.split('.')[0];
+        const badge = filenameWithoutExt.replace(/\D/g, '');
         const student = allStudentsList.find(s => s.badge === badge);
         if (student) {
             const base64 = await new Promise<string>(r => { 
@@ -781,6 +782,26 @@ const CSV_TYPE_MAP: Record<string, string> = {
     'night_class_afternoon': '夜輔下午放學',
     'night_class_night': '夜輔晚上放學'
 };
+
+function resetStudentPreview(): void {
+    const fileInput = document.getElementById('file-students') as HTMLInputElement;
+    fileInput.value = '';
+    const preview = document.getElementById('preview-students') as HTMLElement;
+    preview.style.display = 'none';
+    preview.textContent = '';
+    (document.getElementById('upload-students') as HTMLButtonElement).disabled = true;
+    parsedData.students = null;
+}
+
+function resetBusPreview(): void {
+    const fileInput = document.getElementById('file-buses') as HTMLInputElement;
+    fileInput.value = '';
+    const preview = document.getElementById('preview-buses') as HTMLElement;
+    preview.style.display = 'none';
+    preview.textContent = '';
+    (document.getElementById('upload-buses') as HTMLButtonElement).disabled = true;
+    parsedData.buses = null;
+}
 
 async function uploadConfig(type: 'students' | 'buses'): Promise<void> {
     const raw = parsedData[type];

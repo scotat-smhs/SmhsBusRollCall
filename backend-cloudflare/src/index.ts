@@ -349,6 +349,43 @@ app.delete('/api/admin/class/photos/:className', authorizeAdmin, async (c) => {
     return c.json({ success: true, count: result.meta.changes });
 });
 
+app.get('/api/admin/config/students/csv', authorizeAdmin, async (c) => {
+    const csvType = c.req.query('csvType') || 'arrival';
+    const { results: students } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
+    
+    let csv = '\uFEFFuid,name,badge,class,bus\n';
+    students.forEach((s: any) => {
+        csv += `${s.uid},${s.name},${s.badge},${s.class || ''},"${s.bus || ''}"\n`;
+    });
+
+    return new Response(csv, {
+        headers: {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': `attachment; filename="students-${csvType}.csv"`
+        }
+    });
+});
+
+app.get('/api/admin/config/buses/csv', authorizeAdmin, async (c) => {
+    const csvType = c.req.query('csvType') || 'arrival';
+    const key = `buses_${csvType}`;
+    let busesJson = await c.env.DB.prepare("SELECT value FROM config WHERE key = ?").bind(key).first<string>("value");
+    if (!busesJson) busesJson = await c.env.DB.prepare("SELECT value FROM config WHERE key = 'buses'").first<string>("value");
+    
+    const buses = busesJson ? JSON.parse(busesJson) : [];
+    let csv = '\uFEFFbus,overflow\n';
+    buses.forEach((b: any) => {
+        csv += `"${b.name || b.bus}",${b.overflow || 40}\n`;
+    });
+
+    return new Response(csv, {
+        headers: {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': `attachment; filename="buses-${csvType}.csv"`
+        }
+    });
+});
+
 app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
     const { students, csvType } = await c.req.json();
     const type = csvType || "arrival";

@@ -281,9 +281,10 @@
                                 </select>
                             </div>
                             <input type="file" id="file-students" accept=".csv" style="margin-bottom: 10px; font-size: 12px;">
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="previewCSV('students')" class="secondary-btn" style="padding: 10px; font-size: 13px;">預覽檔案</button>
-                                <button id="upload-students" onclick="uploadConfig('students')" disabled class="primary-btn" style="padding: 10px; font-size: 13px;">確認上傳</button>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                <button onclick="previewCSV('students')" class="secondary-btn" style="flex: 1; padding: 10px; font-size: 13px; margin: 0; min-width: 100px;">預覽檔案</button>
+                                <button id="upload-students" onclick="uploadConfig('students')" disabled class="primary-btn" style="flex: 1; padding: 10px; font-size: 13px; margin: 0; min-width: 100px;">確認上傳</button>
+                                <button onclick="downloadListCSV('students')" class="secondary-btn" style="flex: 1.5; padding: 10px; font-size: 13px; margin: 0; min-width: 150px; background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7;">下載目前名單</button>
                             </div>
                             <div id="preview-students" class="preview-container" style="display:none"></div>
                             <p id="status-students" class="status-msg"></p>
@@ -301,9 +302,10 @@
                                 </select>
                             </div>
                             <input type="file" id="file-buses" accept=".csv" style="margin-bottom: 10px; font-size: 12px;">
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="previewCSV('buses')" class="secondary-btn" style="padding: 10px; font-size: 13px;">預覽檔案</button>
-                                <button id="upload-buses" onclick="uploadConfig('buses')" disabled class="primary-btn" style="padding: 10px; font-size: 13px;">確認上傳</button>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                <button onclick="previewCSV('buses')" class="secondary-btn" style="flex: 1; padding: 10px; font-size: 13px; margin: 0; min-width: 100px;">預覽檔案</button>
+                                <button id="upload-buses" onclick="uploadConfig('buses')" disabled class="primary-btn" style="flex: 1; padding: 10px; font-size: 13px; margin: 0; min-width: 100px;">確認上傳</button>
+                                <button onclick="downloadListCSV('buses')" class="secondary-btn" style="flex: 1.5; padding: 10px; font-size: 13px; margin: 0; min-width: 150px; background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7;">下載目前列表</button>
                             </div>
                             <div id="preview-buses" class="preview-container" style="display:none"></div>
                             <p id="status-buses" class="status-msg"></p>
@@ -332,3 +334,4 @@
     <script type="module" src="script.ts"></script>
 </body>
 </html>
+l>
