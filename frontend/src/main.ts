@@ -502,7 +502,7 @@ class App {
     const currentBus = this.reviewBusSelect.value;
 
     const cancelBtn = document.getElementById('close-review')!;
-    if (this.isMismatchedData) {
+    if (this.isMismatchedData && this.pendingRollCalls.length > 0) {
         cancelBtn.style.display = 'none';
         const warning = document.createElement('div');
         warning.className = 'error-text';
