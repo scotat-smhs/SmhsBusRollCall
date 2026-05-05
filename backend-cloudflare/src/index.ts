@@ -390,8 +390,11 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
     const { students, csvType } = await c.req.json();
     const type = csvType || "arrival";
     
+    // Delete existing students for this listType to perform an overwrite
+    await c.env.DB.prepare("DELETE FROM students WHERE listType = ?").bind(type).run();
+
     const queries = students.map((s: any) => {
-        return c.env.DB.prepare("INSERT OR REPLACE INTO students (uid, listType, name, badge, class, bus, photo) VALUES (?, ?, ?, ?, ?, ?, ?)")
+        return c.env.DB.prepare("INSERT INTO students (uid, listType, name, badge, class, bus, photo) VALUES (?, ?, ?, ?, ?, ?, ?)")
             .bind(s.uid, type, s.name, s.badge || "", s.class || "", s.bus || "", s.photo || null);
     });
 

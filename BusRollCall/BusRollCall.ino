@@ -46,7 +46,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 };
 
 void beep(int duration) {
-  tone(BUZZER_PIN, 2000);
+  tone(BUZZER_PIN, 5000);
   delay(duration);
   noTone(BUZZER_PIN);
 }
@@ -71,7 +71,7 @@ void setup() {
   rfid.PCD_Init();
   pinMode(BATTERY_PIN, INPUT);
 
-  BLEDevice::init("Smhs-Scanner-2");
+  BLEDevice::init("Smhs-Scanner-1");
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 

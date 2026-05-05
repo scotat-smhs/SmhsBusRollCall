@@ -537,12 +537,28 @@ app.post('/api/admin/config/students', authorizeAdmin, async (req, res) => {
     const { students, csvType } = req.body;
     const type = csvType || "arrival";
     if (firestore) {
-        for (let i = 0; i < students.length; i += 450) {
-            const batch = firestore.batch();
-            students.slice(i, i + 450).forEach((s: any) => {
-                if (s.uid) batch.set(firestore!.collection('students').doc(`${s.uid}_${type}`), { ...s, listType: type }, { merge: true });
-            });
-            await batch.commit();
+        try {
+            // Delete existing students for this listType to perform an overwrite
+            const snapshot = await firestore.collection('students').where('listType', '==', type).get();
+            if (!snapshot.empty) {
+                const docs = snapshot.docs;
+                for (let i = 0; i < docs.length; i += 450) {
+                    const deleteBatch = firestore.batch();
+                    docs.slice(i, i + 450).forEach(doc => deleteBatch.delete(doc.ref));
+                    await deleteBatch.commit();
+                }
+            }
+
+            for (let i = 0; i < students.length; i += 450) {
+                const batch = firestore.batch();
+                students.slice(i, i + 450).forEach((s: any) => {
+                    if (s.uid) batch.set(firestore!.collection('students').doc(`${s.uid}_${type}`), { ...s, listType: type });
+                });
+                await batch.commit();
+            }
+        } catch (err) {
+            console.error('Failed to overwrite students:', err);
+            return res.status(500).json({ error: "Failed to overwrite student list" });
         }
     }
     res.json({ success: true });
