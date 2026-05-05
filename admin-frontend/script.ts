@@ -684,6 +684,7 @@ async function uploadBulkPhotos(): Promise<void> {
         
         if (!student) {
             payload.name = filenameWithoutExt;
+            payload.badge = filenameWithoutExt;
             payload.className = '未知';
         }
 

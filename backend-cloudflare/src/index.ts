@@ -406,26 +406,75 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
     const { students, csvType } = await c.req.json();
     const type = csvType || "arrival";
     
-    // Deduplicate by uid — last entry wins
-    const uniqueStudents = Object.values(
-        students.reduce((acc: any, s: any) => {
-            if (s.uid) acc[s.uid] = s;
-            return acc;
-        }, {})
-    );
-
-    await c.env.DB.prepare("DELETE FROM students WHERE listType = ?").bind(type).run();
-
-    const queries = (uniqueStudents as any[]).map((s: any) => {
-        return c.env.DB.prepare("INSERT INTO students (uid, listType, name, badge, class, bus, photo) VALUES (?, ?, ?, ?, ?, ?, ?)")
-            .bind(s.uid, type, s.name, s.badge || "", s.class || "", s.bus || "", s.photo || null);
+    // 1. Fetch ALL photos from the database to enable cross-list matching (by UID and Badge)
+    const { results: allPhotos } = await c.env.DB.prepare(
+        "SELECT uid, badge, photo, name, listType FROM students WHERE photo IS NOT NULL"
+    ).all<any>();
+    
+    const uidPhotoMap = new Map();
+    const badgePhotoMap = new Map();
+    allPhotos.forEach(p => {
+        if (p.uid) uidPhotoMap.set(p.uid, p.photo);
+        if (p.badge) badgePhotoMap.set(p.badge, p.photo);
     });
 
-    for (let i = 0; i < queries.length; i += 100) {
-        await c.env.DB.batch(queries.slice(i, i + 100));
+    // 2. Deduplicate new list and track new badges
+    const newStudentsMap = new Map();
+    const newBadgesSet = new Set();
+    students.forEach((s: any) => {
+        if (s.uid) {
+            newStudentsMap.set(s.uid, s);
+            if (s.badge) newBadgesSet.add(s.badge);
+        }
+    });
+
+    // 3. Identify students to "rescue" to unknown (had photo in THIS list, now gone from CSV by BOTH UID and Badge)
+    const rescuedQueries = [];
+    const currentListPhotos = allPhotos.filter(p => p.listType === type);
+    for (const old of currentListPhotos) {
+        const stillInList = newStudentsMap.has(old.uid) || (old.badge && newBadgesSet.has(old.badge));
+        if (!stillInList) {
+            rescuedQueries.push(
+                c.env.DB.prepare("INSERT OR REPLACE INTO students (uid, listType, name, badge, class, photo) VALUES (?, 'unknown', ?, ?, '未知', ?)")
+                .bind(old.uid, old.name, old.badge || "", old.photo)
+            );
+        }
+    }
+
+    // 4. Clean up "unknown" records that are now identified in the new list
+    const unknownToCleanup = allPhotos.filter(p => p.listType === 'unknown' && (newStudentsMap.has(p.uid) || (p.badge && newBadgesSet.has(p.badge))));
+    const cleanupQueries = unknownToCleanup.map(p => 
+        c.env.DB.prepare("DELETE FROM students WHERE uid = ? AND listType = 'unknown'").bind(p.uid)
+    );
+
+    // 5. Clear the current list
+    await c.env.DB.prepare("DELETE FROM students WHERE listType = ?").bind(type).run();
+
+    // 6. Insert new students, matching photos by UID first, then Badge
+    const insertQueries = Array.from(newStudentsMap.values()).map((s: any) => {
+        const photo = uidPhotoMap.get(s.uid) || (s.badge ? badgePhotoMap.get(s.badge) : null);
+        return c.env.DB.prepare("INSERT INTO students (uid, listType, name, badge, class, bus, photo) VALUES (?, ?, ?, ?, ?, ?, ?)")
+            .bind(s.uid, type, s.name, s.badge || "", s.class || "", s.bus || "", photo);
+    });
+
+    // Execute batches
+    if (cleanupQueries.length > 0) {
+        for (let i = 0; i < cleanupQueries.length; i += 100) {
+            await c.env.DB.batch(cleanupQueries.slice(i, i + 100));
+        }
+    }
+
+    if (rescuedQueries.length > 0) {
+        for (let i = 0; i < rescuedQueries.length; i += 100) {
+            await c.env.DB.batch(rescuedQueries.slice(i, i + 100));
+        }
+    }
+
+    for (let i = 0; i < insertQueries.length; i += 100) {
+        await c.env.DB.batch(insertQueries.slice(i, i + 100));
     }
     
-    return c.json({ success: true, count: uniqueStudents.length });
+    return c.json({ success: true, count: newStudentsMap.size, rescued: rescuedQueries.length });
 });
 
 app.post('/api/admin/config/buses', authorizeAdmin, async (c) => {
@@ -474,7 +523,7 @@ app.delete('/api/admin/student/photo/:uid', authorizeAdmin, async (c) => {
 });
 
 app.post('/api/admin/student/photo', authorizeAdmin, async (c) => {
-    const { uid, photo, name, className } = await c.req.json();
+    const { uid, photo, name, className, badge } = await c.req.json();
     if (!uid || !photo) return c.json({ error: "Missing data" }, 400);
     
     // 1. Try to update existing records
@@ -482,8 +531,8 @@ app.post('/api/admin/student/photo', authorizeAdmin, async (c) => {
     
     // 2. If no rows updated, create a placeholder in the "未知" category
     if (updateRes.meta.changes === 0) {
-        await c.env.DB.prepare("INSERT OR REPLACE INTO students (uid, listType, name, class, photo) VALUES (?, ?, ?, ?, ?)")
-            .bind(uid, 'unknown', name || uid, className || '未知', photo)
+        await c.env.DB.prepare("INSERT OR REPLACE INTO students (uid, listType, name, badge, class, photo) VALUES (?, ?, ?, ?, ?, ?)")
+            .bind(uid, 'unknown', name || uid, badge || "", className || '未知', photo)
             .run();
     }
     
