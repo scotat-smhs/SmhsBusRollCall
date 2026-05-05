@@ -135,7 +135,7 @@ app.get('/api/students', authorize, async (c) => {
   const students: Record<string, any> = {};
 
   // 1. Fetch Students strictly for the active slot type
-  const { results: studentList } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = ?").bind(activeCsvType).all<any>();
+  const { results: studentList } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus, listType FROM students WHERE listType = ?").bind(activeCsvType).all<any>();
   studentList.forEach(s => {
     students[s.uid] = s;
   });
@@ -265,7 +265,7 @@ app.get('/api/admin/rollcall-csv', authorizeAdmin, async (c) => {
     const matchingConfig = slots.find((s: any) => `${s.start}-${s.end}` === timeSlot) || slots.find((s: any) => s.label === timeSlot);
     const csvType = matchingConfig?.csvType || "arrival";
 
-    const { results: students } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = ?").bind(csvType).all<any>();
+    const { results: students } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
     const { results: records } = await c.env.DB.prepare("SELECT * FROM rollcalls WHERE date = ? AND timeSlot = ?")
         .bind(date, timeSlot)
         .all<any>();
@@ -317,7 +317,7 @@ app.get('/api/admin/rollcall-week', authorizeAdmin, async (c) => {
             const slotLabel = `${slot.start}-${slot.end}`;
             const csvType = slot.csvType || "arrival";
             
-            const { results: students } = await c.env.DB.prepare("SELECT * FROM students WHERE listType = ?").bind(csvType).all<any>();
+            const { results: students } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
             const { results: records } = await c.env.DB.prepare("SELECT * FROM rollcalls WHERE date = ? AND timeSlot = ?")
                 .bind(dateStr, slotLabel)
                 .all<any>();

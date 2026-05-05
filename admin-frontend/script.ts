@@ -114,48 +114,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Expose functions to window for inline onclick handlers
-(window as any).toggleDaysDropdown = toggleDaysDropdown;
-(window as any).downloadListCSV = downloadListCSV;
-(window as any).openSettings = openSettings;
-(window as any).saveSettings = saveSettings;
-(window as any).testConnection = testConnection;
-(window as any).login = login;
-(window as any).logout = logout;
-(window as any).showDashboard = showDashboard;
-(window as any).uploadSystemPlaceholder = uploadSystemPlaceholder;
-(window as any).switchTab = switchTab;
-(window as any).renderAccounts = renderAccounts;
-(window as any).updateAccount = updateAccount;
-(window as any).addAccount = addAccount;
-(window as any).resetPassword = resetPassword;
-(window as any).saveAccounts = saveAccounts;
-(window as any).renderSlots = renderSlots;
-(window as any).addSlot = addSlot;
-(window as any).saveSlots = saveSlots;
-(window as any).updateDefaultSlot = updateDefaultSlot;
-(window as any).resetToDefaults = resetToDefaults;
-(window as any).openPhotoFolder = openPhotoFolder;
-(window as any).closePhotoFolder = closePhotoFolder;
-(window as any).fetchPhotos = fetchPhotos;
-(window as any).renderPhotos = renderPhotos;
-(window as any).filterPhotos = filterPhotos;
-(window as any).modifyPhoto = modifyPhoto;
-(window as any).deletePhoto = deletePhoto;
-(window as any).deleteFolderPhotos = deleteFolderPhotos;
-(window as any).uploadStudentPhoto = uploadStudentPhoto;
-(window as any).uploadBulkPhotos = uploadBulkPhotos;
-(window as any).fetchTempRiders = fetchTempRiders;
-(window as any).deleteTempRider = deleteTempRider;
-(window as any).addTemporaryRider = addTemporaryRider;
-(window as any).fetchBusesForTemp = fetchBusesForTemp;
-(window as any).lookupStudent = lookupStudent;
-(window as any).updateOccupancy = updateOccupancy;
-(window as any).previewCSV = previewCSV;
-(window as any).uploadConfig = uploadConfig;
-(window as any).downloadCSV = downloadCSV;
-(window as any).downloadWeekCSV = downloadWeekCSV;
-
 function openSettings(): void {
     (document.getElementById('settingsModal') as HTMLElement).style.display = 'flex';
     (document.getElementById('apiUrlInput') as HTMLInputElement).value = BASE_URL;
@@ -563,9 +521,9 @@ function renderPhotos(photos: any[]): void {
             folder.className = 'photo-card';
             folder.innerHTML = `
                 <div class="photo-card-actions">
-                    <button class="photo-action-btn delete" title="批量刪除此目錄所有相片" onclick="event.stopPropagation(); deleteFolderPhotos('${cls}')">✕</button>
+                    <button class="photo-action-btn delete" title="批量刪除此目錄所有相片" onclick="window.deleteFolderPhotos('${cls}')">✕</button>
                 </div>
-                <div id="class-img" class="photo-card-img" style="flex-direction: column; gap: 10px; cursor: pointer;" onclick="openPhotoFolder('${cls}')">
+                <div id="class-img" class="photo-card-img" style="flex-direction: column; gap: 10px; cursor: pointer;" onclick="window.openPhotoFolder('${cls}')">
                     <svg width="60" height="60" viewBox="0 0 24 24" fill="#1976d2"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
                     <span style="font-weight: 600; color: #1976d2;">${cls}</span>
                 </div>
@@ -598,12 +556,13 @@ function renderPhotos(photos: any[]): void {
 
         classPhotos.forEach(p => {
             const url = `${BASE_URL}/api/photo/${p.uid}?token=${authToken}&t=${Date.now()}`;
+            const safeName = p.name.replace(/'/g, "\\'");
             const div = document.createElement('div');
             div.className = 'photo-card';
             div.innerHTML = `
                 <div class="photo-card-actions">
-                    <button class="photo-action-btn" title="更換相片" onclick="event.stopPropagation(); modifyPhoto('${p.uid}')">✎</button>
-                    <button class="photo-action-btn delete" title="刪除相片" onclick="event.stopPropagation(); deletePhoto('${p.uid}','${p.name}')">✕</button>
+                    <button class="photo-action-btn" title="更換相片" onclick="window.modifyPhoto('${p.uid}')">✎</button>
+                    <button class="photo-action-btn delete" title="刪除相片" onclick="window.deletePhoto('${p.uid}','${safeName}')">✕</button>
                 </div>
                 <div class="photo-card-img" onclick="window.open('${url}','_blank')">
                     <img loading="lazy" src="${url}" onload="this.style.opacity=1" style="opacity: 0; transition: opacity 0.5s;" onerror="this.src='${BASE_URL}/api/placeholder'">
@@ -931,3 +890,45 @@ async function downloadWeekCSV(): Promise<void> {
         }
     } else { alert('下載失敗'); }
 }
+
+// Expose functions to window for inline onclick handlers
+(window as any).toggleDaysDropdown = toggleDaysDropdown;
+(window as any).downloadListCSV = downloadListCSV;
+(window as any).openSettings = openSettings;
+(window as any).saveSettings = saveSettings;
+(window as any).testConnection = testConnection;
+(window as any).login = login;
+(window as any).logout = logout;
+(window as any).showDashboard = showDashboard;
+(window as any).uploadSystemPlaceholder = uploadSystemPlaceholder;
+(window as any).switchTab = switchTab;
+(window as any).renderAccounts = renderAccounts;
+(window as any).updateAccount = updateAccount;
+(window as any).addAccount = addAccount;
+(window as any).resetPassword = resetPassword;
+(window as any).saveAccounts = saveAccounts;
+(window as any).renderSlots = renderSlots;
+(window as any).addSlot = addSlot;
+(window as any).saveSlots = saveSlots;
+(window as any).updateDefaultSlot = updateDefaultSlot;
+(window as any).resetToDefaults = resetToDefaults;
+(window as any).openPhotoFolder = openPhotoFolder;
+(window as any).closePhotoFolder = closePhotoFolder;
+(window as any).fetchPhotos = fetchPhotos;
+(window as any).renderPhotos = renderPhotos;
+(window as any).filterPhotos = filterPhotos;
+(window as any).modifyPhoto = modifyPhoto;
+(window as any).deletePhoto = deletePhoto;
+(window as any).deleteFolderPhotos = deleteFolderPhotos;
+(window as any).uploadStudentPhoto = uploadStudentPhoto;
+(window as any).uploadBulkPhotos = uploadBulkPhotos;
+(window as any).fetchTempRiders = fetchTempRiders;
+(window as any).deleteTempRider = deleteTempRider;
+(window as any).addTemporaryRider = addTemporaryRider;
+(window as any).fetchBusesForTemp = fetchBusesForTemp;
+(window as any).lookupStudent = lookupStudent;
+(window as any).updateOccupancy = updateOccupancy;
+(window as any).previewCSV = previewCSV;
+(window as any).uploadConfig = uploadConfig;
+(window as any).downloadCSV = downloadCSV;
+(window as any).downloadWeekCSV = downloadWeekCSV;
