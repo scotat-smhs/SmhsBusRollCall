@@ -672,18 +672,29 @@ async function uploadBulkPhotos(): Promise<void> {
     for (let i = 0; i < files.length; i++) {
         const f = files[i];
         const filenameWithoutExt = f.name.split('.')[0];
-        const badge = filenameWithoutExt;
-        const student = allStudentsList.find(s => s.badge === badge);
-        if (student) {
-            const base64 = await compressPhoto(f);
-            await fetch(`${BASE_URL}/api/admin/student/photo`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-                body: JSON.stringify({ uid: student.uid, photo: base64 })
-            });
-            count++;
+        
+        // 1. Try to match by badge or UID
+        let student = allStudentsList.find(s => s.badge === filenameWithoutExt || s.uid === filenameWithoutExt);
+        
+        const base64 = await compressPhoto(f);
+        const payload: any = { 
+            uid: student ? student.uid : filenameWithoutExt, 
+            photo: base64 
+        };
+        
+        if (!student) {
+            payload.name = filenameWithoutExt;
+            payload.className = '未知';
         }
-        status.textContent = `進度... (${count}/${files.length})`;
+
+        const res = await fetch(`${BASE_URL}/api/admin/student/photo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) count++;
+        status.textContent = `進度... (${i+1}/${files.length})`;
     }
     status.textContent = `上傳完成！共成功上傳 ${count} 張相片。`;
     fetchPhotos();

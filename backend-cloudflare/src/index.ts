@@ -345,6 +345,13 @@ app.get('/api/admin/rollcall-week', authorizeAdmin, async (c) => {
 
 app.delete('/api/admin/class/photos/:className', authorizeAdmin, async (c) => {
     const classNameIn = c.req.param('className');
+    
+    if (classNameIn === '未知') {
+        // For '未知' folder, delete the placeholder records entirely
+        const result = await c.env.DB.prepare("DELETE FROM students WHERE class = '未知'").run();
+        return c.json({ success: true, count: result.meta.changes });
+    }
+
     const className = classNameIn === '未分班' ? '' : classNameIn;
     
     let query;
@@ -467,9 +474,19 @@ app.delete('/api/admin/student/photo/:uid', authorizeAdmin, async (c) => {
 });
 
 app.post('/api/admin/student/photo', authorizeAdmin, async (c) => {
-    const { uid, photo } = await c.req.json();
+    const { uid, photo, name, className } = await c.req.json();
     if (!uid || !photo) return c.json({ error: "Missing data" }, 400);
-    await c.env.DB.prepare("UPDATE students SET photo = ? WHERE uid = ?").bind(photo, uid).run();
+    
+    // 1. Try to update existing records
+    const updateRes = await c.env.DB.prepare("UPDATE students SET photo = ? WHERE uid = ?").bind(photo, uid).run();
+    
+    // 2. If no rows updated, create a placeholder in the "未知" category
+    if (updateRes.meta.changes === 0) {
+        await c.env.DB.prepare("INSERT OR REPLACE INTO students (uid, listType, name, class, photo) VALUES (?, ?, ?, ?, ?)")
+            .bind(uid, 'unknown', name || uid, className || '未知', photo)
+            .run();
+    }
+    
     return c.json({ success: true });
 });
 

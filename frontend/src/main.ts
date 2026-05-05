@@ -55,6 +55,7 @@ class App {
   private isConnected = false;
   private isSyncing = false;
   private isMismatchedData = false;
+  private preseLogoutButton = false;
 
   constructor() {
     this.initEventListeners();
@@ -136,16 +137,6 @@ class App {
     document.getElementById('close-review')?.addEventListener('click', () => this.closeReview());
     document.getElementById('sync-now-btn')?.addEventListener('click', () => this.syncRecords());
 
-    const refreshBtn = document.getElementById('refresh-btn')!;
-    refreshBtn.addEventListener('click', async () => {
-        refreshBtn.classList.add('spinning');
-        const csvType = await this.updateTimeslotDisplay();
-        await this.fetchBuses(csvType);
-        await this.fetchStudents(csvType);
-        refreshBtn.classList.remove('spinning');
-        alert("資料已更新！");
-    });
-
     // Bus Selection
     this.busSelect.addEventListener('change', () => {
         this.updateUIColors();
@@ -166,6 +157,7 @@ class App {
         if (this.pendingRollCalls.length > 0) {
             // If there are pending records, open the review modal to prompt the user
             // The review modal will now need a "Logout and Clear Data" option
+            this.preseLogoutButton = true;
             this.openReview();
             // We will add the logout logic *within* the openReview modal context in a subsequent step
         } else {
@@ -594,19 +586,20 @@ class App {
 
     logoutConfirmationContainer.appendChild(logoutMessage);
     logoutConfirmationContainer.appendChild(logoutButton);
-
     // Append the logout confirmation container *before* the summary
     this.reviewList.appendChild(logoutConfirmationContainer);
+    
+    if (this.preseLogoutButton) {
+      logoutConfirmationContainer.style.display = 'block';
+    } else {
+      logoutConfirmationContainer.style.display = 'none';
+    }
 
 
     // Check if this review was opened due to mismatched data or logout intent
     // We'll need a way to signal if logout is the intent. For now, assume if pendingRollCalls > 0 and not syncing, it's for logout.
     // We will make this container visible if pendingRollCalls > 0
     if (this.pendingRollCalls.length > 0) {
-         // If this review was opened because of logout intent (or mismatched data before logout)
-         // We need to check if it was specifically opened from the disconnect button with pending data
-         // For now, let's assume if pending items exist, this confirmation should be visible.
-        logoutConfirmationContainer.style.display = 'block';
 
         // Also, disable the close button if this is a forced review for logout
         if (this.isMismatchedData) { // Re-using isMismatchedData to imply a forced review context
@@ -642,6 +635,7 @@ class App {
         return;
     }
     this.reviewSheet.style.display = 'none';
+    this.preseLogoutButton = false;
   }
 
   private async syncRecords() {
@@ -711,7 +705,7 @@ class App {
   private updateDisconnectBtn() {
     const img = document.getElementById('disconnect-img')!;
     if (this.isConnected) {
-        img.textContent = 'link_off';
+      img.textContent = 'link_off';
     } else {
       img.textContent = 'logout';
     }

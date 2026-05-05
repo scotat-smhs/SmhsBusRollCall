@@ -124,12 +124,11 @@ button {
 }
 
 /* Fix elements with hardcoded colors */
-[data-theme="dark"] .secondary-btn { background-color: #e8e8ed; color: #424141; }
-[data-theme="dark"] #class-img{ background: #124760; }
+[data-theme="dark"] .secondary-btn { background-color: #e8e8ed; color: #424141;}
+[data-theme="dark"] #class-img{ background: #124760;}
 [data-theme="dark"] .photo-card-info {border-top: 1px solid #4a4a4c;}
-[data-theme="dark"] .small-border { border-top: 1px solid #000; }
-[data-theme="dark"] .list-dl-btn{ background: #38a1d2; color: #01579b; border:2px solid #248bdb;
-}
+[data-theme="dark"] .small-border { border-top: 1px solid #000;}
+[data-theme="dark"] .list-dl-btn{ background: #38a1d2; color: #01579b; border:2px solid #248bdb;}
 
 .primary-btn { background-color: var(--primary); color: white; }
 .primary-btn:hover { background-color: #0077ed; }
