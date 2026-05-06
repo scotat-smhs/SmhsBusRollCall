@@ -44,6 +44,9 @@ class App {
   private reviewSummary = document.getElementById('review-summary')!;
   private loadingOverlay = document.getElementById('loading-overlay')!;
 
+  // Register Elements
+  private registerModal = document.getElementById('register-modal')!;
+  private registerError = document.getElementById('register-error')!;
 
   // State
   private currentUid: string | null = null;
@@ -128,6 +131,14 @@ class App {
   private initEventListeners() {
     // Login,Logout
     document.getElementById('login-btn')?.addEventListener('click', () => this.handleLogin());
+    document.getElementById('show-register-btn')?.addEventListener('click', () => {
+        this.registerModal.style.display = 'flex';
+        this.registerError.textContent = '';
+    });
+    document.getElementById('close-register')?.addEventListener('click', () => {
+        this.registerModal.style.display = 'none';
+    });
+    document.getElementById('register-submit-btn')?.addEventListener('click', () => this.handleRegister());
 
     // Scanner
     document.getElementById('connect-ble-btn')?.addEventListener('click', () => this.connectScanner());;
@@ -197,6 +208,46 @@ class App {
       }
     } catch (err) {
       errorEl.textContent = '網路錯誤';
+    }
+  }
+
+  private async handleRegister() {
+    const name = (document.getElementById('reg-name') as HTMLInputElement).value.trim();
+    const user = (document.getElementById('reg-username') as HTMLInputElement).value.trim();
+    const pass = (document.getElementById('reg-password') as HTMLInputElement).value;
+    const passCheck = (document.getElementById('reg-password-check') as HTMLInputElement).value;
+    const type = (document.getElementById('reg-type') as HTMLSelectElement).value;
+
+    if (!name || !user || !pass || !passCheck) {
+        this.registerError.textContent = '請填寫所有欄位';
+        return;
+    }
+
+    if (pass !== passCheck) {
+        this.registerError.textContent = '密碼不一致';
+        return;
+    }
+
+    try {
+        const res = await fetch(`${BASE_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, username: user, password: pass, type })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert('申請已提交，請等待管理員審核。');
+            this.registerModal.style.display = 'none';
+            // Clear inputs
+            (document.getElementById('reg-name') as HTMLInputElement).value = '';
+            (document.getElementById('reg-username') as HTMLInputElement).value = '';
+            (document.getElementById('reg-password') as HTMLInputElement).value = '';
+            (document.getElementById('reg-password-check') as HTMLInputElement).value = '';
+        } else {
+            this.registerError.textContent = data.error || '註冊失敗';
+        }
+    } catch (err) {
+        this.registerError.textContent = '網路錯誤';
     }
   }
 

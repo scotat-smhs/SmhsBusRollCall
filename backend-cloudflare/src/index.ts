@@ -92,15 +92,76 @@ app.post('/api/login', async (c) => {
   const { username, password } = await c.req.json();
   if (!username || !password) return c.json({ error: "Username and password required" }, 400);
 
+  // Check pending accounts first
+  const pending = await c.env.DB.prepare("SELECT username FROM pending_accounts WHERE username = ?").bind(username).first();
+  if (pending) {
+    return c.json({ error: "Account Pending" }, 403);
+  }
+
   const user = await c.env.DB.prepare("SELECT * FROM accounts WHERE username = ?").bind(username).first<any>();
   
   if (user && user.password === password) {
     const isAdmin = (user.type === 'admin' || username === 'admin');
-    const token = isAdmin ? c.env.ADMIN_TOKEN : c.env.USER_TOKEN; // ← fix this line
+    const token = isAdmin ? c.env.ADMIN_TOKEN : c.env.USER_TOKEN;
     return c.json({ token, user: { name: user.name, username, type: isAdmin ? 'admin' : 'user' } });
   }
   
   return c.json({ error: "Invalid credentials" }, 401);
+});
+
+app.post('/api/register', async (c) => {
+  const { name, username, password, type } = await c.req.json();
+  if (!name || !username || !password || !type) {
+    return c.json({ error: "Missing required fields" }, 400);
+  }
+
+  // Check if username exists in accounts
+  const existing = await c.env.DB.prepare("SELECT username FROM accounts WHERE username = ?").bind(username).first();
+  if (existing) {
+    return c.json({ error: "used username" }, 400);
+  }
+
+  // Check if username exists in pending_accounts
+  const pending = await c.env.DB.prepare("SELECT username FROM pending_accounts WHERE username = ?").bind(username).first();
+  if (pending) {
+    return c.json({ error: "used username" }, 400);
+  }
+
+  await c.env.DB.prepare("INSERT INTO pending_accounts (username, password, type, name, createdAt) VALUES (?, ?, ?, ?, ?)")
+    .bind(username, password, type, name, new Date().toISOString())
+    .run();
+
+  return c.json({ success: true, message: "Registration pending approval" });
+});
+
+app.get('/api/admin/pending-accounts', authorizeAdmin, async (c) => {
+  const { results } = await c.env.DB.prepare("SELECT * FROM pending_accounts").all();
+  return c.json(results);
+});
+
+app.post('/api/admin/approve-account', authorizeAdmin, async (c) => {
+  const { username } = await c.req.json();
+  if (!username) return c.json({ error: "Invalid request" }, 400);
+
+  const pending = await c.env.DB.prepare("SELECT * FROM pending_accounts WHERE username = ?").bind(username).first<any>();
+  if (!pending) return c.json({ error: "Pending account not found" }, 404);
+
+  // Move to accounts
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT OR REPLACE INTO accounts (username, password, type, name) VALUES (?, ?, ?, ?)")
+      .bind(pending.username, pending.password, pending.type, pending.name),
+    c.env.DB.prepare("DELETE FROM pending_accounts WHERE username = ?").bind(username)
+  ]);
+
+  return c.json({ success: true });
+});
+
+app.post('/api/admin/decline-account', authorizeAdmin, async (c) => {
+  const { username } = await c.req.json();
+  if (!username) return c.json({ error: "Invalid request" }, 400);
+
+  await c.env.DB.prepare("DELETE FROM pending_accounts WHERE username = ?").bind(username).run();
+  return c.json({ success: true });
 });
 
 app.get('/api/buses', authorize, async (c) => {

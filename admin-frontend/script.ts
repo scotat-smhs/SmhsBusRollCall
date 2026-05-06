@@ -34,6 +34,8 @@ let allPhotos: any[] = [];
 let currentPhotoFolder: string | null = null;
 let allStudentsList: any[] = [];
 let parsedData: { students: string | null, buses: string | null } = { students: null, buses: null };
+let pendingAccounts: Account[] = [];
+let pendingPollingInterval: any = null;
 
 (document.getElementById('datePicker') as HTMLInputElement).valueAsDate = new Date();
 
@@ -140,6 +142,103 @@ async function testConnection(): Promise<void> {
     }
 }
 
+async function fetchPendingAccounts(): Promise<void> {
+    if (!authToken) return;
+    try {
+        const res = await fetch(`${BASE_URL}/api/admin/pending-accounts`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+            pendingAccounts = await res.json();
+            updatePendingBadge();
+            renderPendingAccounts();
+        }
+    } catch (err) {
+        console.error('Failed to fetch pending accounts:', err);
+    }
+}
+
+function updatePendingBadge(): void {
+    const dot = document.getElementById('pending-dot') as HTMLElement;
+    if (dot) {
+        dot.style.display = pendingAccounts.length > 0 ? 'block' : 'none';
+    }
+}
+
+function renderPendingAccounts(): void {
+    const body = document.getElementById('pending-accounts-body') as HTMLElement;
+    if (!body) return;
+    body.innerHTML = '';
+    pendingAccounts.forEach(acc => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${acc.name}</td>
+            <td>${acc.username}</td>
+            <td>${acc.type === 'admin' ? '管理員' : '使用者'}</td>
+            <td>
+                <button class="approve-btn" onclick="approveAccount('${acc.username}')">核准</button>
+                <button class="decline-btn" onclick="declineAccount('${acc.username}')">拒絕</button>
+            </td>
+        `;
+        body.appendChild(tr);
+    });
+}
+
+function showPendingModal(): void {
+    (document.getElementById('pending-modal') as HTMLElement).style.display = 'flex';
+    fetchPendingAccounts();
+}
+
+function closePendingModal(): void {
+    (document.getElementById('pending-modal') as HTMLElement).style.display = 'none';
+}
+
+async function approveAccount(username: string): Promise<void> {
+    const status = document.getElementById('pending-status') as HTMLElement;
+    try {
+        const res = await fetch(`${BASE_URL}/api/admin/approve-account`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ username })
+        });
+        if (res.ok) {
+            alert('已核准帳號。');
+            await fetchPendingAccounts();
+            await fetchAccounts();
+            await saveAccounts();
+        } else {
+            if (status) status.textContent = '核准失敗';
+        }
+    } catch (err) {
+        if (status) status.textContent = '網路錯誤';
+    }
+}
+
+async function declineAccount(username: string): Promise<void> {
+    if (!confirm(`確定要拒絕 ${username} 的註冊申請嗎？`)) return;
+    const status = document.getElementById('pending-status') as HTMLElement;
+    try {
+        const res = await fetch(`${BASE_URL}/api/admin/decline-account`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ username })
+        });
+        if (res.ok) {
+            fetchPendingAccounts();
+        } else {
+            if (status) status.textContent = '拒絕失敗';
+        }
+    } catch (err) {
+        if (status) status.textContent = '網路錯誤';
+    }
+}
+
 async function login(): Promise<void> {
     const user = (document.getElementById('username') as HTMLInputElement).value;
     const pass = (document.getElementById('password') as HTMLInputElement).value;
@@ -184,6 +283,10 @@ function showDashboard(): void {
     fetchSlots();
     fetchPhotos();
     fetchGlobalStudents();
+
+    fetchPendingAccounts();
+    if (pendingPollingInterval) clearInterval(pendingPollingInterval);
+    pendingPollingInterval = setInterval(fetchPendingAccounts, 30000);
 }
 
 async function updateCurrentSlotDisplay(): Promise<void> {
@@ -938,6 +1041,10 @@ async function downloadWeekCSV(): Promise<void> {
 (window as any).addAccount = addAccount;
 (window as any).resetPassword = resetPassword;
 (window as any).saveAccounts = saveAccounts;
+(window as any).showPendingModal = showPendingModal;
+(window as any).closePendingModal = closePendingModal;
+(window as any).approveAccount = approveAccount;
+(window as any).declineAccount = declineAccount;
 (window as any).renderSlots = renderSlots;
 (window as any).addSlot = addSlot;
 (window as any).saveSlots = saveSlots;

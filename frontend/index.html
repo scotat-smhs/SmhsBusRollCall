@@ -28,10 +28,50 @@
                     <label>密碼</label>
                     <input class="form" type="password" id="password" placeholder="請輸入密碼">
                 </div>
-                <button id="login-btn" class="primary-btn">登入</button>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <button id="login-btn" class="primary-btn">登入</button>
+                    <button id="show-register-btn" class="secondary-btn">註冊新帳號</button>
+                </div>
                 <p id="login-error" class="error-text"></p>
             </div>
         </section>
+
+        <!-- Register Modal -->
+        <div id="register-modal" class="modal" style="display: none;">
+            <div class="register-content modal-content">
+                <div class="modal-header">
+                    <button id="close-register" class="text-btn">取消</button>
+                    <h3>註冊新帳號</h3>
+                </div>
+                <div class="v-stack" style="padding: 20px; gap: 15px;">
+                    <div class="form-group">
+                        <label>顯示名稱 (如: 王小明)</label>
+                        <input class="form" type="text" id="reg-name" placeholder="請輸入姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>使用者名稱 (登入時輸入)</label>
+                        <input class="form" type="text" id="reg-username" placeholder="請輸入使用者名稱">
+                    </div>
+                    <div class="form-group">
+                        <label>密碼</label>
+                        <input class="form" type="password" id="reg-password" placeholder="請輸入密碼">
+                    </div>
+                    <div class="form-group">
+                        <label>確認密碼</label>
+                        <input class="form" type="password" id="reg-password-check" placeholder="請再次輸入密碼">
+                    </div>
+                    <div class="form-group">
+                        <label>申請角色</label>
+                        <select class="form" id="reg-type">
+                            <option value="user">使用者 (糾察隊員)</option>
+                            <option value="admin">管理員 (糾察幹部)</option>
+                        </select>
+                    </div>
+                    <button id="register-submit-btn" class="primary-btn">提交申請</button>
+                    <p id="register-error" class="error-text"></p>
+                </div>
+            </div>
+        </div>
 
         <!-- Main View (Scanner) -->
         <section id="main-view" class="view" style="display: none;">

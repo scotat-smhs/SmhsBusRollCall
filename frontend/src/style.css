@@ -87,6 +87,10 @@ body.purple-bg { background-color: var(--question); }
 .login-card h1 { font-size: 28px; margin-bottom: 0.5rem; }
 .subtitle { color: var(--secondary); margin-bottom: 2rem; font-size: 14px; }
 
+.register-content {
+  overflow-y: auto;
+}
+
 /* Forms */
 .form-group {
   text-align: left;
@@ -307,6 +311,10 @@ input:focus, select:focus {
   border-radius: 20px;
   font-weight: 700;
   font-size: 18px;
+}
+
+#register-modal{
+  overflow-y: auto;
 }
 
 /* Footer & Sync */

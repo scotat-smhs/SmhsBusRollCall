@@ -5,6 +5,14 @@ CREATE TABLE IF NOT EXISTS accounts (
     name TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS pending_accounts (
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    type TEXT NOT NULL,
+    name TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL -- JSON string
