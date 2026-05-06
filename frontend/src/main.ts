@@ -43,7 +43,7 @@ class App {
   private reviewList = document.getElementById('review-list')!;
   private reviewSummary = document.getElementById('review-summary')!;
   private loadingOverlay = document.getElementById('loading-overlay')!;
-  
+
 
   // State
   private currentUid: string | null = null;
@@ -501,7 +501,7 @@ class App {
         warning.style.textAlign = 'center';
         warning.style.marginBottom = '15px';
         warning.style.padding = '10px';
-        warning.style.background = '#fff0f0';
+        warning.style.background = 'var(--warning-bg)';
         warning.style.borderRadius = '10px';
         warning.textContent = "⚠️ 偵測到不同時段的舊資料。請在繼續之前上傳或刪除這些記錄。";
         this.reviewList.appendChild(warning);
@@ -552,9 +552,9 @@ class App {
     logoutConfirmationContainer.id = 'logout-confirmation-container';
     logoutConfirmationContainer.style.marginTop = '20px';
     logoutConfirmationContainer.style.padding = '15px';
-    logoutConfirmationContainer.style.background = '#f0fff0'; // Light green background for confirmation
+    logoutConfirmationContainer.style.background = 'var(--box-color)'; // Light green background for confirmation
     logoutConfirmationContainer.style.borderRadius = '10px';
-    logoutConfirmationContainer.style.border = '1px solid #d0f0d0';
+    logoutConfirmationContainer.style.border = '1px solid var(--primary)';
     logoutConfirmationContainer.style.textAlign = 'center';
     logoutConfirmationContainer.style.display = 'none'; // Initially hidden
 
@@ -562,7 +562,7 @@ class App {
     logoutMessage.textContent = "您有未同步的資料。點擊下方按鈕將清除這些資料並登出。";
     logoutMessage.style.marginBottom = '15px';
     logoutMessage.style.fontSize = '14px';
-    logoutMessage.style.color = '#333';
+    logoutMessage.style.color = 'var(--text)';
 
     const logoutButton = document.createElement('button');
     logoutButton.textContent = "登出並清除資料";
@@ -594,29 +594,6 @@ class App {
     } else {
       logoutConfirmationContainer.style.display = 'none';
     }
-
-
-    // Check if this review was opened due to mismatched data or logout intent
-    // We'll need a way to signal if logout is the intent. For now, assume if pendingRollCalls > 0 and not syncing, it's for logout.
-    // We will make this container visible if pendingRollCalls > 0
-    if (this.pendingRollCalls.length > 0) {
-
-        // Also, disable the close button if this is a forced review for logout
-        if (this.isMismatchedData) { // Re-using isMismatchedData to imply a forced review context
-             cancelBtn.style.display = 'none';
-             // Add back the warning message if it's mismatched data too
-            const warning = document.createElement('div');
-            warning.className = 'error-text';
-            warning.style.textAlign = 'center';
-            warning.style.marginBottom = '15px';
-            warning.style.padding = '10px';
-            warning.style.background = '#fff0f0';
-            warning.style.borderRadius = '10px';
-            warning.textContent = "⚠️ 偵測到不同時段的舊資料。"; // Simplified message
-            this.reviewList.prepend(warning); // Prepend the warning
-        }
-    }
-
 
     this.reviewSummary.innerHTML = `
         <div class="summary-pills">
@@ -710,6 +687,41 @@ class App {
       img.textContent = 'logout';
     }
   }
+}
+
+// --- Dark mode toggle ---
+const themeToggle = document.getElementById('themeToggle') as HTMLElement;
+const themeImage = document.getElementById('theme-img') as HTMLElement;
+const root = document.documentElement;
+ 
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) root.setAttribute('data-theme', savedTheme);
+ 
+function updateThemeIcon(): void {
+    if (!themeImage) return;
+    const isDark = root.getAttribute('data-theme') === 'dark' ||
+                  (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    themeImage.textContent = isDark ? 'brightness_7' : 'moon_stars';
+}
+ 
+if (themeToggle) {
+    updateThemeIcon();
+ 
+    themeToggle.addEventListener('click', () => {
+        const current = root.getAttribute('data-theme');
+        let next: string;
+ 
+        if (!current) {
+            // If no manual theme, toggle based on system preference
+            next = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark';
+        } else {
+            next = current === 'dark' ? 'light' : 'dark';
+        }
+ 
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcon();
+    });
 }
 
 new App();

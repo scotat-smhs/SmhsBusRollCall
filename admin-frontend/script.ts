@@ -548,7 +548,7 @@ function renderPhotos(photos: any[]): void {
         header.style.justifyContent = 'space-between';
         header.style.alignItems = 'center';
         header.style.marginBottom = '15px';
-        header.style.background = '#f5f5f7';
+        header.style.background = 'var(--grid-column)';
         header.style.padding = '10px 15px';
         header.style.borderRadius = '10px';
         header.innerHTML = `

@@ -15,11 +15,11 @@
                 <p class="subtitle">進入點名掃描系統</p>
                 <div class="form-group">
                     <label>使用者名稱</label>
-                    <input type="text" id="username" placeholder="請輸入使用者名稱">
+                    <input class="form" type="text" id="username" placeholder="請輸入使用者名稱">
                 </div>
                 <div class="form-group">
                     <label>密碼</label>
-                    <input type="password" id="password" placeholder="請輸入密碼">
+                    <input class="form" type="password" id="password" placeholder="請輸入密碼">
                 </div>
                 <button id="login-btn" class="primary-btn">登入</button>
                 <p id="login-error" class="error-text"></p>
@@ -76,18 +76,18 @@
                         <div id="photo-loading" class="spinner" style="display: none;"></div>
                     </div>
                     <div class="student-details">
-                        <h2 id="student-name">--</h2>
+                        <h2 class="content-text" id="student-name">--</h2>
                         <div class="detail-row">
                             <span class="content-text">學號:</span>
-                            <strong id="student-badge">--</strong>
+                            <strong class="content-text" id="student-badge">--</strong>
                         </div>
                         <div class="detail-row">
                             <span class="content-text">班級:</span>
-                            <strong id="student-class">--</strong>
+                            <strong class="content-text" id="student-class">--</strong>
                         </div>
                         <div class="detail-row">
                             <span class="content-text"># UID:</span>
-                            <strong id="student-uid">--</strong>
+                            <strong class="content-text" id="student-uid">--</strong>
                         </div>
                         <div id="student-bus" class="bus-badge">--</div>
                     </div>
@@ -114,7 +114,7 @@
                     <h3>點名記錄預覽</h3>
                     <div class="review-bus-selector">
                         <select id="review-bus-select">
-                            <option value="">請選擇車次</option>
+                            <option>請選擇車次</option>
                         </select>
                     </div>
                 </div>
