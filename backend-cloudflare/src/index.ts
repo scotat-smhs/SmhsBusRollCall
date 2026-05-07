@@ -94,7 +94,8 @@ const getTimeSlotInfo = (slots: any[], defaultSlot: any, dateObj: Date = new Dat
 
 const getTimeSlot = (slots: any[], defaultSlot: any, dateObj: Date = new Date()) => {
   const info = getTimeSlotInfo(slots, defaultSlot, dateObj);
-  return info.label === defaultSlot.label ? defaultSlot.label : `${info.start}-${info.end}`;
+  // Return the label directly, as it's more user-friendly and the backend can handle it in matching logic.
+  return info.label;
 };
 
 // --- Endpoints ---

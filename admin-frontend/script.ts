@@ -449,24 +449,31 @@ async function fetchSlots(): Promise<void> {
 function updateSlotSelectors(): void {
     const exportSelect = document.getElementById('slotPicker') as HTMLSelectElement;
     const tempSelect = document.getElementById('temp-slot') as HTMLSelectElement;
-    
-    const uniqueSlots = new Set();
-    slotConfigs.forEach(s => {
-        uniqueSlots.add(`${s.start}-${s.end}`);
-    });
-    uniqueSlots.add(defaultSlot.label);
 
-    const options = Array.from(uniqueSlots).map((s: any) => {
-        const label = slotConfigs.find(sc => `${sc.start}-${sc.end}` === s)?.label || s;
-        return { value: s, label: label === s ? s : `${label} (${s})` };
+    // Use slot labels directly for unique values
+    const uniqueSlotLabels = new Set<string>();
+    slotConfigs.forEach(s => {
+        uniqueSlotLabels.add(s.label);
+    });
+    uniqueSlotLabels.add(defaultSlot.label); // Ensure default slot label is included
+
+    // Create options using labels as values
+    const options = Array.from(uniqueSlotLabels).map((label: string) => {
+        // Find the original slot config for this label to get its time range if needed for display
+        const matchingSlotConfig = slotConfigs.find(sc => sc.label === label);
+        const displayLabel = matchingSlotConfig
+            ? `${matchingSlotConfig.label} (${matchingSlotConfig.start}-${matchingSlotConfig.end})` // Show label and time range
+            : label; // If it's the default slot label, just use the label
+
+        return { value: label, label: displayLabel }; // Value is now the label
     });
 
     if (exportSelect) {
         exportSelect.innerHTML = '';
         options.forEach((opt: any) => {
             const o = document.createElement('option');
-            o.value = opt.value;
-            o.textContent = opt.label;
+            o.value = opt.value; // Value is the label
+            o.textContent = opt.label; // Text content is the display label (label + time range)
             exportSelect.appendChild(o);
         });
     }
@@ -475,13 +482,12 @@ function updateSlotSelectors(): void {
         tempSelect.innerHTML = '';
         options.forEach((opt: any) => {
             const o = document.createElement('option');
-            o.value = opt.value;
-            o.textContent = opt.label;
+            o.value = opt.value; // Value is the label
+            o.textContent = opt.label; // Text content is the display label (label + time range)
             tempSelect.appendChild(o);
         });
     }
 }
-
 function renderSlots(): void {
     const body = document.getElementById('slots-body') as HTMLElement;
     const days = ['日', '一', '二', '三', '四', '五', '六'];
