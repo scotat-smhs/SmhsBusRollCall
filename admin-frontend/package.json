@@ -10,12 +10,15 @@
     "pm2": "npm run build && pm2 start ecosystem.config.cjs",
     "pm2:stop": "pm2 stop ecosystem.config.cjs",
     "pm2:logs": "pm2 logs bus-rollcall-admin",
-    "preview": "vite preview"
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^8.0.10"
+    "@cloudflare/vite-plugin": "^1.36.0",
+    "vite": "^8.0.10",
+    "wrangler": "^4.88.0"
   }
 }
