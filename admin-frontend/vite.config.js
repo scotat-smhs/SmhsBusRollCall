@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig({
-  plugins: [], // Added plugins array
+  plugins: [cloudflare()], // Added plugins array
   server: {
     host: '0.0.0.0', // Listen on all network interfaces
     port: 5174,
