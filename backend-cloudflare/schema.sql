@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS rollcalls (
     timestamp TEXT NOT NULL,
     date TEXT NOT NULL,
     timeSlot TEXT NOT NULL,
+    uploaderName TEXT, -- Added column for uploader's name
     syncedAt TEXT NOT NULL
 );
 

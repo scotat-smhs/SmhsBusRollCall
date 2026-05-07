@@ -708,6 +708,7 @@ app.post('/api/rollcall/batch', authorize, async (c) => {
 
   const payload = c.get('jwtPayload');
   const createdBy = payload?.username || 'unknown';
+  const uploaderName = payload?.name || 'Unknown User'; // Extract name from JWT payload
 
   const { slots, default: defaultSlot } = await getSlotConfigs(c.env.DB);
   const queries = [];
@@ -722,10 +723,10 @@ app.post('/api/rollcall/batch', authorize, async (c) => {
       const timeSlot = getTimeSlot(slots, defaultSlot, dateObj);
 
       const recordId = `${uid}_${dateStr}_${timeSlot.replace(/:/g, '-')}`;
-      // Note: We'd need to update the schema to actually store 'createdBy', 
+      // Note: We'd need to update the schema to actually store 'createdBy',
       // but for now this demonstrates that the backend HAS the identity.
-      queries.push(c.env.DB.prepare("INSERT OR REPLACE INTO rollcalls (id, uid, timestamp, date, timeSlot, syncedAt) VALUES (?, ?, ?, ?, ?, ?)")
-          .bind(recordId, uid, timestamp, dateStr, timeSlot, new Date().toISOString()));
+      queries.push(c.env.DB.prepare("INSERT OR REPLACE INTO rollcalls (id, uid, timestamp, date, timeSlot, uploaderName, syncedAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .bind(recordId, uid, timestamp, dateStr, timeSlot, uploaderName, new Date().toISOString()));
   }
 
   if (queries.length > 0) {
@@ -735,6 +736,6 @@ app.post('/api/rollcall/batch', authorize, async (c) => {
   }
 
   return c.json({ success: true, message: `Successfully synced ${records.length} records` });
-});
+  });
 
-export default app;
+  export default app;
