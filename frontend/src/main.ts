@@ -55,6 +55,7 @@ class App {
   private pendingRollCalls: PendingRecord[] = [];
   private allStudents: Record<string, Student> = {};
   private bleDevice: BluetoothDevice | null = null;
+  private rfidChar: BluetoothRemoteGATTCharacteristic | null = null;
   private isConnected = false;
   private isSyncing = false;
   private isMismatchedData = false;
@@ -373,11 +374,11 @@ class App {
 
       // RFID Notify
       const rfidService = await server.getPrimaryService(SERVICE_UUID);
-      const rfidChar = await rfidService.getCharacteristic(CHARACTERISTIC_UUID);
-      await rfidChar.startNotifications();
-      rfidChar.addEventListener('characteristicvaluechanged', (e: any) => {
+      this.rfidChar = await rfidService.getCharacteristic(CHARACTERISTIC_UUID);
+      await this.rfidChar.startNotifications();
+      this.rfidChar.addEventListener('characteristicvaluechanged', (e: any) => {
         const uid = new TextDecoder().decode(e.target.value);
-        this.handleScan(uid);
+        if (!uid.startsWith('BEEP:')) this.handleScan(uid);
       });
 
       // Battery
@@ -402,6 +403,7 @@ class App {
 
       this.bleDevice.addEventListener('gattserverdisconnected', () => {
         this.isConnected = false;
+        this.rfidChar = null;
         this.updateDisconnectBtn();
         this.updateStatus(false, "已斷開連接");
         this.readyState.style.display = 'flex';
@@ -499,6 +501,16 @@ class App {
     return buses.includes(selectedBus);
   }
 
+  private async sendBeepCommand(cmd: string) {
+    if (!this.rfidChar) return;
+    try {
+      const encoded = new TextEncoder().encode(cmd);
+      await this.rfidChar.writeValue(encoded);
+    } catch (err) {
+      console.warn('sendBeepCommand failed:', err);
+    }
+  }
+
   private updateUIColors() {
     const s = this.currentStudent;
     const bus = this.busSelect.value;
@@ -509,6 +521,7 @@ class App {
         document.body.className = 'purple-bg'; 
         msgEl.textContent = "請先選擇車次";
         msgEl.style.color = "black";
+        this.sendBeepCommand("BEEP:2:500:500");
         return; 
     }
 
@@ -516,14 +529,17 @@ class App {
         document.body.className = 'red-bg';
         msgEl.textContent = "資料庫中無此標籤";
         msgEl.style.color = "white";
+        this.sendBeepCommand("BEEP:8:50:50");
     } else if (this.isBusMatch(s.bus, bus)) {
         document.body.className = 'green-bg';
         msgEl.textContent = "符合所選車次";
         msgEl.style.color = "white";
+        this.sendBeepCommand("BEEP:200");
     } else {
         document.body.className = 'yellow-bg';
         msgEl.textContent = "與所選車次不符";
         msgEl.style.color = "black";
+        this.sendBeepCommand("BEEP:3:100:100");
     }
   }
 
@@ -649,9 +665,11 @@ class App {
         `;
         item.querySelector('.delete-btn')?.addEventListener('click', async (e: any) => {
             const idx = parseInt(e.target.dataset.index);
-            this.pendingRollCalls.splice(idx, 1);
-            this.openReview(false); // Refresh list without resetting bus selector
-            await this.updatePendingUI();
+            if (confirm(`確認刪除此筆資料？`)){
+              this.pendingRollCalls.splice(idx, 1);
+              this.openReview(false); // Refresh list without resetting bus selector
+              await this.updatePendingUI();
+            }
         });
         this.reviewList.appendChild(item);
     });

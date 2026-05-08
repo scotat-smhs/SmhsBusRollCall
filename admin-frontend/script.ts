@@ -627,7 +627,7 @@ function renderPhotos(photos: any[]): void {
         classes.forEach(cls => {
             const folder = document.createElement('div');
             folder.className = 'photo-card';
-            const color = cls === '未知' ? '#ff3b30' : '#1976d2';
+            const color = cls === '未知' ? '#ff3b30' : '#19bcd2';
             const bgc = cls === '未知' ? 'class-img-e' : 'class-img';
             folder.innerHTML = `
                 <div class="photo-card-actions">
