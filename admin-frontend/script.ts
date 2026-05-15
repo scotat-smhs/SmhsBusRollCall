@@ -78,6 +78,7 @@ router.on({
             ensureDashboardInitialized();
             fetchTempRiders(); 
             fetchBusesForTemp();
+            fetchSlots()
         }
     },
     '/photos': () => {
@@ -87,6 +88,7 @@ router.on({
             switchTab('photos');
             ensureDashboardInitialized();
             closePhotoFolder(false);
+            fetchPhotos();
         }
     },
     '/photos/:folder': (params) => {
