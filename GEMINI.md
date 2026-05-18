@@ -5,16 +5,14 @@ A multi-platform system for scanning RFID cards to perform bus roll calls. The s
 ## Project Overview
 
 - **Hardware (ESP32-C3 SuperMini):** Scans RC522 RFID tags, provides buzzer feedback, and broadcasts data over BLE.
-- **Backend (Express/TypeScript):** 100% cloud-native server running on **Vercel** or **Raspberry Pi**, using **Firestore** for all storage.
-- **Backend (Cloudflare Workers/Hono):** Alternative serverless backend using **Cloudflare D1** (SQLite) for storage.
-- **iOS App (SwiftUI):** Native app with local recording, manual review, instant local-only lookups, and batch sync.
-- **User Dashboard (Vite/TS):** Web-based scanner interface utilizing Web Bluetooth (GATT) with instant local-only lookups.
-- **Admin Panel (Vite/HTML):** management interface for exports, temporary rider assignments, and a native Firestore Photo Library.
+- **Backend (Cloudflare Workers/Hono):** Serverless backend using **Cloudflare D1** (SQLite) for storage.
+- **User Dashboard (Vite/TS):** Web-based scanner interface utilizing Web Bluetooth (GATT) with instant local-only lookups. Deployed on **Cloudflare Pages**.
+- **Admin Panel (Vite/HTML):** management interface for exports, temporary rider assignments, and a native D1-backed Photo Library. Deployed on **Cloudflare Pages**.
 
 ## Architecture
 
-- **Database:** Uses **Google Cloud Firestore** as the exclusive database. Documents use a `uid_type` format for student records to handle multiple trip lists.
-- **Photos:** Student photos are stored as **Base64 strings** directly in Firestore student documents.
+- **Database:** Uses **Cloudflare D1** as the exclusive database. Documents use a `uid_type` format for student records to handle multiple trip lists.
+- **Photos:** Student photos are stored as **Base64 strings** directly in the D1 database.
 - **Roll Call Slots:** Scans are automatically categorized by Taipei time:
     - `07:00-09:00` (Morning)
     - `16:00-18:00` (Afternoon)
@@ -34,27 +32,17 @@ Admin can assign any student (even those not in the master database) to a specif
 Native grid-style gallery in the Admin Panel for managing student photos.
 - Bulk Upload: Match filenames to badge numbers (e.g., `211002.jpg`) for mass updates.
 - Real-time Search: Filter by name, UID, or badge number.
-- Secure Serving: Token-based access for browser `<img>` tags.
 
 ## Deployment
 
-### Cloudflare Workers (D1)
-The project includes a Cloudflare Worker backend in `backend-cloudflare/`.
-- **Database:** Uses Cloudflare D1.
-- **Commands:**
+### Cloudflare Ecosystem
+The entire software stack is hosted on Cloudflare:
+- **Backend (Worker):**
     - `npm run db:init`: Initialize the database schema locally.
     - `npm run dev`: Start local development server.
     - `npm run deploy`: Deploy to Cloudflare Workers.
-
-### Vercel (Cloud)
-The project is optimized for Vercel Serverless Functions.
-- **Backend:** Uses `FIREBASE_SERVICE_ACCOUNT` environment variable for credentials.
-- **Frontends:** Automatically handles SPA routing via `vercel.json`.
-
-### Raspberry Pi 5 (Local)
-Managed via **PM2** and **Caddy**.
-- **Commands:** `npm run pm2` starts the service in the background.
-- **HTTPS:** Caddy handles automatic SSL and reverse proxying to ports 5001 and 5174.
+- **Frontends (Pages):**
+    - `npm run deploy`: Build and deploy to Cloudflare Pages.
 
 ## Development Conventions
 
