@@ -512,44 +512,18 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
     const { students, csvType } = await c.req.json();
     const type = csvType || "arrival";
 
-    const { results: allPhotos } = await c.env.DB.prepare(
-        "SELECT uid, badge, name, listType, photo FROM students WHERE photo IS NOT NULL"
-    ).all<any>();
-    
-    const uidPhotoMap = new Map();
-    const badgePhotoMap = new Map();
-    allPhotos.forEach(p => {
-        if (p.uid) uidPhotoMap.set(p.uid, p.photo);
-        if (p.badge) badgePhotoMap.set(p.badge, p.photo);
-    });
-
-    // 2. Deduplicate new list and track new badges
+    // 1. Deduplicate new list
     const newStudentsMap = new Map();
-    const newBadgesSet = new Set();
     students.forEach((s: any) => {
         if (s.uid) {
             newStudentsMap.set(s.uid, s);
-            if (s.badge) newBadgesSet.add(s.badge);
         }
     });
 
-    // 3. Identify students to "rescue" to unknown (had photo in THIS list, now gone from CSV by BOTH UID and Badge)
-    const rescuedQueries = [];
-    const currentListPhotos = allPhotos.filter(p => p.listType === type);
-    for (const old of currentListPhotos) {
-        const stillInList = newStudentsMap.has(old.uid) || (old.badge && newBadgesSet.has(old.badge));
-        if (!stillInList) {
-            rescuedQueries.push(
-                c.env.DB.prepare("INSERT OR REPLACE INTO students (uid, listType, name, badge, class, photo) VALUES (?, 'unknown', ?, ?, '未知', ?)")
-                .bind(old.uid ?? null, old.name ?? null, old.badge ?? "", old.photo ?? null)
-            );
-        }
-      }
-
-    // 1. Rename current list to a temp holding list instead of deleting
+    // 2. Rename current list to a temp holding list instead of deleting
     await c.env.DB.prepare("UPDATE students SET listType = 'temp_old' WHERE listType = ?").bind(type).run();
 
-    // 2. Insert all new students WITHOUT photos
+    // 3. Insert all new students WITHOUT photos
     const newStudentsArray = Array.from(newStudentsMap.values());
     for (let i = 0; i < newStudentsArray.length; i += 100) {
         const chunk = newStudentsArray.slice(i, i + 100);
@@ -559,7 +533,7 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
         ));
     }
 
-    // 3. Copy photos by UID match — entirely within the DB, no data leaves
+    // 4. Copy photos by UID match — entirely within the DB, no data leaves
     await c.env.DB.prepare(`
         UPDATE students SET photo = (
             SELECT photo FROM students s2 
@@ -567,7 +541,7 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
         ) WHERE listType = ? AND photo IS NULL
     `).bind(type).run();
 
-    // 4. Copy photos by badge match for any still missing
+    // 5. Copy photos by badge match for any still missing
     await c.env.DB.prepare(`
         UPDATE students SET photo = (
             SELECT photo FROM students s2 
@@ -575,8 +549,8 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
         ) WHERE listType = ? AND photo IS NULL AND badge != ''
     `).bind(type).run();
 
-    // 5. Rescue students removed from the list who had photos → move to unknown
-    await c.env.DB.prepare(`
+    // 6. Rescue students removed from the list who had photos → move to unknown
+    const rescueResult = await c.env.DB.prepare(`
         INSERT OR REPLACE INTO students (uid, listType, name, badge, class, photo)
         SELECT uid, 'unknown', name, badge, '未知', photo FROM students
         WHERE listType = 'temp_old' AND photo IS NOT NULL
@@ -584,10 +558,10 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
         AND (badge = '' OR badge NOT IN (SELECT badge FROM students WHERE listType = ? AND badge != ''))
     `).bind(type, type).run();
 
-    // 6. Delete the temp holding list
+    // 7. Delete the temp holding list
     await c.env.DB.prepare("DELETE FROM students WHERE listType = 'temp_old'").run();
     
-    return c.json({ success: true, count: newStudentsMap.size, rescued: rescuedQueries.length });
+    return c.json({ success: true, count: newStudentsMap.size, rescued: rescueResult.meta.changes });
 });
 
 app.post('/api/admin/config/buses', authorizeAdmin, async (c) => {
