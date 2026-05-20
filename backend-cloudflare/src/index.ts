@@ -544,6 +544,7 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
                 .bind(old.uid ?? null, old.name ?? null, old.badge ?? "", old.photo ?? null)
             );
         }
+      }
 
     // 1. Rename current list to a temp holding list instead of deleting
     await c.env.DB.prepare("UPDATE students SET listType = 'temp_old' WHERE listType = ?").bind(type).run();
