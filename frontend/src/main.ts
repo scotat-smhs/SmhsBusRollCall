@@ -786,6 +786,7 @@ class App {
         btn.textContent = "確認並上傳至伺服器";
         btn.disabled = false;
     }
+    await this.updatePendingUI();
   }
 
   private checkBluetoothSupport() {
