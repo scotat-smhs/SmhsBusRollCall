@@ -221,7 +221,20 @@ app.get('/api/students', authorize, async (c) => {
   // 1. Fetch Students strictly for the active slot type
   const { results: studentList } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus, listType FROM students WHERE listType = ?").bind(activeCsvType).all<any>();
   studentList.forEach(s => {
-    students[s.uid] = s;
+    if (students[s.uid]) {
+      const existingBus = students[s.uid].bus || "";
+      const newBus = s.bus || "";
+      if (existingBus && newBus) {
+        const existingBuses = existingBus.split('/').map((b: string) => b.trim());
+        if (!existingBuses.includes(newBus)) {
+          students[s.uid].bus = existingBus + " / " + newBus;
+        }
+      } else if (newBus) {
+        students[s.uid].bus = newBus;
+      }
+    } else {
+      students[s.uid] = { ...s };
+    }
   });
 
   // 2. Fetch Temporary Riders (Override/Add for this specific trip)
@@ -380,7 +393,27 @@ app.get('/api/admin/rollcall-csv', authorizeAdmin, async (c) => {
     const matchingConfig = slots.find((s: any) => `${s.start}-${s.end}` === timeSlot) || slots.find((s: any) => s.label === timeSlot);
     const csvType = matchingConfig?.csvType || "arrival";
 
-    const { results: students } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
+    const { results: rawStudents } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
+    const studentsMap = new Map<string, any>();
+    rawStudents.forEach((s: any) => {
+        const existing = studentsMap.get(s.uid);
+        if (existing) {
+            const existingBus = existing.bus || "";
+            const newBus = s.bus || "";
+            if (existingBus && newBus) {
+                const existingBuses = existingBus.split('/').map((b: string) => b.trim());
+                if (!existingBuses.includes(newBus)) {
+                    existing.bus = existingBus + " / " + newBus;
+                }
+            } else if (newBus) {
+                existing.bus = newBus;
+            }
+        } else {
+            studentsMap.set(s.uid, { ...s });
+        }
+    });
+    const students = Array.from(studentsMap.values());
+
     const { results: records } = await c.env.DB.prepare("SELECT id, uid, timestamp, date, timeSlot, uploaderName FROM rollcalls WHERE date = ? AND timeSlot = ?") // Added uploaderName
         .bind(date, timeSlot)
         .all<any>();
@@ -432,7 +465,27 @@ app.get('/api/admin/rollcall-week', authorizeAdmin, async (c) => {
             const slotLabel = `${slot.start}-${slot.end}`;
             const csvType = slot.csvType || "arrival";
             
-            const { results: students } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
+            const { results: rawStudents } = await c.env.DB.prepare("SELECT uid, name, badge, class, bus FROM students WHERE listType = ?").bind(csvType).all<any>();
+            const studentsMap = new Map<string, any>();
+            rawStudents.forEach((s: any) => {
+                const existing = studentsMap.get(s.uid);
+                if (existing) {
+                    const existingBus = existing.bus || "";
+                    const newBus = s.bus || "";
+                    if (existingBus && newBus) {
+                        const existingBuses = existingBus.split('/').map((b: string) => b.trim());
+                        if (!existingBuses.includes(newBus)) {
+                            existing.bus = existingBus + " / " + newBus;
+                        }
+                    } else if (newBus) {
+                        existing.bus = newBus;
+                    }
+                } else {
+                    studentsMap.set(s.uid, { ...s });
+                }
+            });
+            const students = Array.from(studentsMap.values());
+
             const { results: records } = await c.env.DB.prepare("SELECT * FROM rollcalls WHERE date = ? AND timeSlot = ?")
                 .bind(dateStr, slotLabel)
                 .all<any>();
@@ -512,11 +565,15 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
     const { students, csvType } = await c.req.json();
     const type = csvType || "arrival";
 
-    // 1. Deduplicate new list
+    // 1. Deduplicate new list by UID and Bus combination
+    // Pad UIDs to 10 digits to restore leading zeros stripped by Excel
     const newStudentsMap = new Map();
     students.forEach((s: any) => {
         if (s.uid) {
-            newStudentsMap.set(s.uid, s);
+            const uid = String(s.uid).trim().padStart(10, '0');
+            const busVal = (s.bus ?? "").trim();
+            const key = `${uid}_${busVal}`;
+            newStudentsMap.set(key, { ...s, uid, bus: busVal });
         }
     });
 
@@ -529,7 +586,7 @@ app.post('/api/admin/config/students', authorizeAdmin, async (c) => {
         const chunk = newStudentsArray.slice(i, i + 100);
         await c.env.DB.batch(chunk.map((s: any) =>
             c.env.DB.prepare("INSERT INTO students (uid, listType, name, badge, class, bus, photo) VALUES (?, ?, ?, ?, ?, ?, NULL)")
-            .bind(s.uid ?? null, type, s.name ?? null, s.badge ?? "", s.class ?? "", s.bus ?? "")
+            .bind(s.uid ?? null, type, s.name ?? null, s.badge ?? "", s.class ?? "", s.bus)
         ));
     }
 

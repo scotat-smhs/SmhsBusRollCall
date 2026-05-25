@@ -24,9 +24,9 @@ CREATE TABLE IF NOT EXISTS students (
     name TEXT NOT NULL,
     badge TEXT,
     class TEXT,
-    bus TEXT,
+    bus TEXT NOT NULL DEFAULT '',
     photo TEXT, -- Base64
-    PRIMARY KEY (uid, listType)
+    PRIMARY KEY (uid, listType, bus)
 );
 
 CREATE TABLE IF NOT EXISTS temporary_riders (
