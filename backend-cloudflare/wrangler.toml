@@ -11,6 +11,9 @@ database_id = "07f18294-9815-41fb-adc9-9186ee4ee1f6"
 # or using 'wrangler secret put JWT_SECRET'
 # [vars]
 # JWT_SECRET = "..."
+[secrets]
+required = ["JWT_SECRET"]
+
 
 [observability]
 enabled = false
