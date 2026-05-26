@@ -3,7 +3,7 @@ import Navigo from 'navigo';
 const router = new Navigo("/", { hash: false });
 
 const BASE_URL: string = localStorage.getItem('apiUrl') || 
-                (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:5001' : 'https://bus-rollcall-backend.s211009.workers.dev');
+                (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:5001' : 'https://bus-rollcall-backend.scotat.workers.dev');
 
 let authToken: string = localStorage.getItem('adminToken') || '';
 let adminName: string = localStorage.getItem('adminName') || '管理員';
