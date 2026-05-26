@@ -150,6 +150,7 @@ class App {
     document.getElementById('review-btn')?.addEventListener('click', () => this.openReview());
     document.getElementById('close-review')?.addEventListener('click', () => this.closeReview());
     document.getElementById('sync-now-btn')?.addEventListener('click', () => this.syncRecords());
+    document.getElementById('delete-all-btn')?.addEventListener('click', () => this.deleteList());
 
     // Bus Selection
     this.busSelect.addEventListener('change', () => {
@@ -310,6 +311,16 @@ class App {
 
     timeslotText.textContent = slot;
     return csvType;
+  }
+
+  private async deleteList() {
+    if (confirm(`確認清除所有資料？`)){
+      this.pendingRollCalls = []; // Clear the array
+      this.savePendingRecords(); // Save the cleared state
+      this.openReview(false);
+      await this.updatePendingUI(); // Update UI to reflect no pending items
+    }
+    await this.updatePendingUI();
   }
 
   private async fetchBuses(csvType?: string) {
@@ -754,6 +765,7 @@ class App {
 
     if (this.isSyncing || this.pendingRollCalls.length === 0) {
       btn.disabled = false;
+      btn.textContent = "確認並上傳至伺服器";
       return;
     }      
 
@@ -762,6 +774,8 @@ class App {
     
     if (recordsToSync.length === 0) {
         alert(`沒有可同步至 ${currentBus} 的有效記錄。`);
+        btn.disabled = false;
+        btn.textContent = "確認並上傳至伺服器";
         return;
     }
 
@@ -800,6 +814,7 @@ class App {
         btn.textContent = "確認並上傳至伺服器";
         btn.disabled = false;
     }
+    this.openReview(false);
     await this.updatePendingUI();
   }
 
