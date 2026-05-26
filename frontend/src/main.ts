@@ -23,6 +23,7 @@ interface PendingRecord {
   class?: string;
   selectedBusAtTimeOfScan: string;
   studentBus: string;
+  timeSlot: string;  // add this
 }
 
 class App {
@@ -743,7 +744,14 @@ class App {
   }
 
   private async syncRecords() {
-    if (this.isSyncing || this.pendingRollCalls.length === 0) return;
+    const btn = document.getElementById('sync-now-btn') as HTMLButtonElement;
+    btn.textContent = "同步中...";
+    btn.disabled = true;  
+
+    if (this.isSyncing || this.pendingRollCalls.length === 0) {
+      btn.disabled = false;
+      return;
+    }      
 
     const currentBus = this.reviewBusSelect.value;
     const recordsToSync = this.pendingRollCalls.filter(r => this.isBusMatch(r.studentBus, currentBus) && r.name !== "未知標籤");
@@ -755,12 +763,14 @@ class App {
 
     this.isSyncing = true;
     this.loadingOverlay.style.display = 'flex';
-    const btn = document.getElementById('sync-now-btn') as HTMLButtonElement;
-    btn.textContent = "同步中...";
-    btn.disabled = true;
 
     try {
-        const records = recordsToSync.map(r => ({ uid: r.uid, timestamp: r.timestamp }));
+        // main.ts line 767
+        const records = recordsToSync.map(r => ({
+          uid: r.uid,
+          timestamp: r.timestamp,
+          timeSlot: r.timeSlot
+        }));
         const res = await fetch(`${BASE_URL}/api/rollcall/batch`, {
             method: 'POST',
             headers: { 

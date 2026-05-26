@@ -172,6 +172,7 @@ function ensureDashboardInitialized(): void {
     updateCurrentSlotDisplay();
     fetchGlobalStudents();
     fetchPendingAccounts();
+    fetchSlots();
     
     if (pendingPollingInterval) clearInterval(pendingPollingInterval);
     pendingPollingInterval = setInterval(fetchPendingAccounts, 30000);

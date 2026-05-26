@@ -107,7 +107,7 @@ app.post('/api/login', async (c) => {
   // Check pending accounts first
   const pending = await c.env.DB.prepare("SELECT username FROM pending_accounts WHERE username = ?").bind(username).first();
   if (pending) {
-    return c.json({ error: "Account Pending" }, 403);
+    return c.json({ error: "帳號待審核（去提醒幹部或老師）" }, 403);
   }
 
   const user = await c.env.DB.prepare("SELECT * FROM accounts WHERE username = ?").bind(username).first<any>();
@@ -129,7 +129,7 @@ app.post('/api/login', async (c) => {
     return c.json({ token, user: { name: user.name, username, type: role } });
   }
   
-  return c.json({ error: "Invalid credentials" }, 401);
+  return c.json({ error: "帳號或密碼錯誤" }, 401);
 });
 
 app.post('/api/register', async (c) => {
@@ -430,7 +430,7 @@ app.get('/api/admin/rollcall-csv', authorizeAdmin, async (c) => {
     records.forEach(r => {
         if (!students.some((s: any) => s.uid === r.uid)) {
             const time = new Date(r.timestamp).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-            csv += `${r.uid},未知/臨時,,,,,已簽到,${time},${r?.uploaderName || ''}\n`; // Added uploaderName
+            csv += `${r.uid},未知/臨時,,,,已簽到,${time},${r?.uploaderName || ''}\n`; // Added uploaderName
         }
     });
 
