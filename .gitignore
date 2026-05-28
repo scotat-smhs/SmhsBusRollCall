@@ -48,3 +48,8 @@ Thumbs.db
 # Arduino
 **/build/
 **/libraries/
+
+# Cloudflare Wrangler
+.wrangler/
+**/.wrangler/
+
